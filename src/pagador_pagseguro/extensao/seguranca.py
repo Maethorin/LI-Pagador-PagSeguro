@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
-import json
 from urllib import urlencode
-from datetime import timedelta, datetime
-
 from xml.etree import ElementTree
 
 import requests
+
 from pagador import settings
 from pagador.seguranca import autenticador
 from pagador.seguranca.autenticador import TipoAutenticacao
 from pagador.seguranca.instalacao import Parametros, InstalacaoNaoFinalizada
 from pagador.settings import PAGSEGURO_REDIRECT_URL
-import pagador_pagseguro
 
 
 class ParametrosPagSeguro(Parametros):
@@ -20,58 +17,24 @@ class ParametrosPagSeguro(Parametros):
         return ["app_secret", "app_id"]
 
 
-class TipoToken(object):
-    authorization_code = "authorization_code"
-    refresh_token = "refresh_token"
-
-
 class Credenciador(autenticador.Credenciador):
     def __init__(self, configuracao):
         self.conta_id = configuracao.conta_id
         self.configuracao = configuracao
-        self.access_token = getattr(configuracao, "token", "")
-        self.refresh_token = getattr(configuracao, "codigo_autorizacao", "")
-        self.token_expiracao = getattr(configuracao, "token_expiracao", datetime.now())
+        self.codigo_autorizacao = getattr(configuracao, "codigo_autorizacao", "")
         self.tipo = TipoAutenticacao.query_string
 
     def _atualiza_credenciais(self):
-        self.access_token = getattr(self.configuracao, "token", "")
-        self.refresh_token = getattr(self.configuracao, "codigo_autorizacao", "")
-        self.token_expiracao = getattr(self.configuracao, "token_expiracao", datetime.now())
+        self.codigo_autorizacao = getattr(self.configuracao, "codigo_autorizacao", "")
 
     def obter_credenciais(self):
         self._atualiza_credenciais()
-        return self.access_token
+        return self.codigo_autorizacao
 
     def esta_valido(self):
-        if not self.access_token:
+        if not self.codigo_autorizacao:
             return False
-        return datetime.now() > self.token_expiracao
-
-
-"""
-u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<authorizationRequest>
-    <reference>8</reference>
-    <permissions>
-        <code>CREATE_CHECKOUTS</code><code>RECEIVE_TRANSACTION_NOTIFICATIONS</code><code>SEARCH_TRANSACTIONS</code>
-    </permissions>
-    <redirectURL>https://app.lojaintegrada.com.br/painel/configuracao/pagamento/pagseguro/aplicacao/retorno</redirectURL>
-</authorizationRequest>'
-"""
-
-"""
-<?xml version="1.0" encoding="ISO-8859-1" standalone="yes"?><authorizationRequest><code>FC2778F98AB24B7F91FE3E75C0E2F808</code><date>2014-09-29T12:23:39.000-03:00</date></authorizationRequest>
-"""
-
-"""
-https://pagseguro.uol.com.br/v2/authorization/request.jhtml?code=FC2778F98AB24B7F91FE3E75C0E2F808
-"""
-
-
-"""
-https://ws.pagseguro.uol.com.br/v2/authorizations/notifications/F80FBBFB96969696568554CBDFB562A95DDA/?appKey=46D5101E787859E444537F85C2B2EEC3&appId=lojaintegrada-vtex
-"""
+        return True
 
 
 class Instalador(object):
@@ -83,8 +46,7 @@ class Instalador(object):
 
     @property
     def sandbox(self):
-        return ""
-        # return "sandbox." if settings.DEBUG else ""
+        return "sandbox." if settings.DEBUG else ""
 
     def url_ativador(self, parametros_redirect):
         dados = {

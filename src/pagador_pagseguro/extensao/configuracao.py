@@ -16,8 +16,8 @@ class MeioPagamentoCadastro(CadastroBase):
     @property
     def registro(self):
         script = Script(tipo=TipoScript.html, nome="registro")
-        script.adiciona_linha(u'Ainda não tem conta no MercadoPago?<br/>')
-        script.adiciona_linha('<a href="//registration-br.mercadopago.com/registration-mp?mode=mp" title="Criar conta MercadoPago" class="btn btn-info btn-xs" target="_blank">cadastre-se</a>')
+        script.adiciona_linha(u'Ainda não tem conta no PagSeguro?')
+        script.adiciona_linha(u'<a href="//pagseguro.uol.com.br/" title="Criar conta PagSeguro" class="btn btn-info btn-xs" target="_blank">cadastre-se</a>')
         return script
 
     def to_dict(self):
@@ -27,7 +27,8 @@ class MeioPagamentoCadastro(CadastroBase):
             ]
         }
 
-PARCELAS = [(0, "Todas"), (1, 1), (2, 2), (3, 3), (4, 4), (5, 5), (6, 6), (9, 9), (10, 10), (12, 12), (15, 15), (18, 18), (24, 24)]
+PARCELAS = [(x, x) for x in range(1, 19)]
+PARCELAS.insert(0, (0, "Todas"))
 
 
 class Formulario(FormularioBase):
