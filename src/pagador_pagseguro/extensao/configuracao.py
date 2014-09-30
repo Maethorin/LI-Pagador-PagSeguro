@@ -23,7 +23,7 @@ class MeioPagamentoCadastro(CadastroBase):
     def to_dict(self):
         return {
             "html": [
-                self.registro.to_dict()
+                self.registro.to_dict(),
             ]
         }
 

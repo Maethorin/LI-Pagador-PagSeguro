@@ -7,11 +7,17 @@ import requests
 from pagador import settings
 from pagador.seguranca import autenticador
 from pagador.seguranca.autenticador import TipoAutenticacao
-from pagador.seguranca.instalacao import Parametros, InstalacaoNaoFinalizada
+from pagador.seguranca.instalacao import Parametros, InstalacaoNaoFinalizada, InstaladorBase
 from pagador.settings import PAGSEGURO_REDIRECT_URL
 
 
 class ParametrosPagSeguro(Parametros):
+    def __init__(self, conta_id, usa_alt=False):
+        meio_pagamento = 'pagseguro'
+        if usa_alt:
+            meio_pagamento = 'pagseguro-alternativo'
+        super(ParametrosPagSeguro, self).__init__(meio_pagamento, id=conta_id)
+
     @property
     def chaves(self):
         return ["app_secret", "app_id"]
@@ -37,36 +43,61 @@ class Credenciador(autenticador.Credenciador):
         return True
 
 
-class Instalador(object):
-    campos = ["codigo_autorizacao"]
+class Instalador(InstaladorBase):
+    campos = ["codigo_autorizacao", "aplicacao"]
 
-    def __init__(self, **filtro_parametros):
+    def __init__(self, configuracao, **filtro_parametros):
+        super(Instalador, self).__init__(configuracao)
         self.conta_id = filtro_parametros["id"]
-        self.parametros = ParametrosPagSeguro("pagseguro", **filtro_parametros)
+        self._parametros = None
+        self.usa_alt = False
+
+    @property
+    def parametros(self):
+        if not self._parametros:
+            self._parametros = ParametrosPagSeguro(conta_id=self.conta_id, usa_alt=self.usa_alt)
+        return self._parametros
 
     @property
     def sandbox(self):
-        return "sandbox." if settings.DEBUG else ""
+        return ""
+        # return "sandbox." if settings.DEBUG else ""
 
     def url_ativador(self, parametros_redirect):
+        self._parametros = None
+        self.usa_alt = 'ua' in parametros_redirect
         dados = {
-            'reference': self.conta_id,
-            'permissions': "CREATE_CHECKOUTS,RECEIVE_TRANSACTION_NOTIFICATIONS,SEARCH_TRANSACTIONS",
-            'redirectURL': "{}?{}".format(PAGSEGURO_REDIRECT_URL.format(self.conta_id), urlencode(parametros_redirect)),
+            "authorizationRequest": {
+                'reference': self.conta_id,
+                'permissions': [
+                    {"code": "CREATE_CHECKOUTS"},
+                    {"code": "SEARCH_TRANSACTIONS"},
+                    {"code": "RECEIVE_TRANSACTION_NOTIFICATIONS"},
+                ],
+                'redirectURL': "<![CDATA[{}?{}]]>".format(PAGSEGURO_REDIRECT_URL.format(self.conta_id), urlencode(parametros_redirect)),
+            }
+        }
+        dados_autorizacao = {
             'appKey': self.parametros.app_secret,
             'appId': self.parametros.app_id,
         }
-        print dados
-        url_autorizacao = 'https://ws.{}pagseguro.uol.com.br/v2/authorizations/request/'.format(self.sandbox)
-        reponse_code = requests.post(url_autorizacao, data=dados)
+        url_autorizacao = 'https://ws.{}pagseguro.uol.com.br/v2/authorizations/request?{}'.format(self.sandbox, urlencode(dados_autorizacao))
+        dados = self.dict_to_xml(dados)
+        print "\n\n\n{}\n\n\n".format(dados)
+        reponse_code = requests.post(url_autorizacao, data=dados, headers={"Content-Type": "application/xml; charset=ISO-8859-1"})
+        # reponse_code = requests.post(url_autorizacao, data=dados)
         if reponse_code.status_code != 200:
-            raise InstalacaoNaoFinalizada(u"erro na geração da url. Code: {} - Resposta: {}".format(reponse_code.status_code, reponse_code.content))
-        code = self.parse_resposta(reponse_code.content)["code"]
+            raise InstalacaoNaoFinalizada(u"Erro ao entrar em contato com o PagSeguro. Código: {} - Resposta: {}".format(reponse_code.status_code, reponse_code.content))
+        code = self.xml_to_dict(reponse_code.content)["code"]
         return "https://{}pagseguro.uol.com.br/v2/authorization/request.jhtml?code={}".format(self.sandbox, code)
 
     def obter_dados(self, dados):
         if not "notificationCode" in dados:
             return {"erro": u"O PagSeguro não retornou o código de autorização válido. Por favor, verifique a sua conta no PagSeguro e tente de novo."}
+        self.usa_alt = 'ua' in dados
+        self._parametros = None
+        if self.usa_alt:
+            del dados["ua"]
         dados.update({
             'appKey': self.parametros.app_secret,
             'appId': self.parametros.app_id,
@@ -76,7 +107,7 @@ class Instalador(object):
         url = "https://ws.pagseguro.uol.com.br/v2/authorizations/notifications/{}/?{}".format(notification_code, urlencode(dados))
         resposta = requests.get(url)
         if resposta.status_code == 200:
-            return self.parse_resposta(resposta.content)
+            return self.xml_to_dict(resposta.content)
         return {"erro": resposta.content}
 
     def dados_de_instalacao(self, dados):
@@ -84,13 +115,34 @@ class Instalador(object):
         if "erro" in dados_instalacao:
             raise InstalacaoNaoFinalizada(dados_instalacao["erro"])
         return {
-            "codigo_autorizacao": dados_instalacao["code"]
+            "codigo_autorizacao": dados_instalacao["code"],
+            "aplicacao": ("pagseguro-alternativo" if self.usa_alt else "pagseguro")
         }
 
     def desinstalar(self, dados):
         return {"redirect": "https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml"}
 
-    def parse_resposta(self, content):
+    def dict_to_xml(self, dados, tem_cabecalho=False):
+        if not type(dados) is dict:
+            return ""
+        if not dados:
+            return ""
+        documento = []
+        if not tem_cabecalho:
+            documento = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>']
+        for chave, valor in dados.iteritems():
+            documento.append("<{}>".format(chave))
+            if type(valor) is dict:
+                documento.append(self.dict_to_xml(valor, True))
+            elif type(valor) is list:
+                for parte in valor:
+                    documento.append(self.dict_to_xml(parte, True))
+            else:
+                documento.append(unicode(valor))
+            documento.append("</{}>".format(chave))
+        return "".join(documento)
+
+    def xml_to_dict(self, content):
         root = ElementTree.fromstring(content)
         resultado = {}
         for child in root:
