@@ -39,14 +39,14 @@ class Registro(RegistroBase):
 
     @property
     def identificador_id(self):
-        if self.retorno_de_preferencia:
-            return self.dados["preference_id"]
+        if self.retorno_de_notificacao:
+            return self.dados["transacao"]
         return None
 
     def __getattr__(self, name):
         if name.startswith("situacao_"):
             tipo = name.replace("situacao_", "")
-            if self.retorno_de_preferencia:
+            if self.retorno_de_requisicao:
                 if tipo != "aprovado" and tipo != "pendente":
                     return False
                 if self.dados["collection_status"] is None:
@@ -79,7 +79,7 @@ class Registro(RegistroBase):
         return True
 
     @property
-    def retorno_de_preferencia(self):
+    def retorno_de_requisicao(self):
         return "collection_status" in self.dados
 
     @property

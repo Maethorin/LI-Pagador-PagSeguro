@@ -1,12 +1,25 @@
 # -*- coding: utf-8 -*-
 import json
+from pagador import settings
 from pagador.envio.requisicao import Enviar
-from pagador.envio.serializacao import Atributo
 from pagador.retorno.models import SituacaoPedido
-from pagador.settings import MERCADOPAGO_PREFERENCE_NOTIFICATION_URL, MEDIA_URL
+from pagador.settings import PAGSEGURO_PREFERENCE_NOTIFICATION_URL
 
-from pagador_pagseguro.extensao.envio import Preferencia, Payer, BackUrls, Shipments, Item, Phone, Identification, PayerAddress, ReceiverAddress
-from pagador_pagseguro.extensao.seguranca import ParametrosMercadoPago
+from pagador_pagseguro.extensao.envio import Checkout
+from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
+
+
+class TipoEnvio(object):
+    def __init__(self, codigo):
+        self.codigo = codigo
+
+    @property
+    def valor(self):
+        if self.codigo == "pac":
+            return 1
+        if "sedex" in self.codigo:
+            return 2
+        return 3
 
 
 class EnviarPedido(Enviar):
@@ -14,59 +27,17 @@ class EnviarPedido(Enviar):
         super(EnviarPedido, self).__init__(pedido, dados, configuracao_pagamento)
         self.exige_autenticacao = True
         self.processa_resposta = True
-        self.url = "https://api.mercadolibre.com/checkout/preferences"
-        self.grava_identificador = True
-        self.envio_por_querystring = False
-
-    def gerar_dados_de_envio(self):
-        notification_url = MERCADOPAGO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta.id)
-        preferencia = Preferencia(
-            auto_return="approved",
-            notification_url=notification_url,
-            external_reference=self.pedido.numero,
-            payer=Payer(
-                name=self.pedido.cliente.nome.split()[0],
-                surname=self.pedido.cliente.nome.split()[-1],
-                email=self.pedido.cliente.email,
-                date_created=self.formatador.formata_data(self.pedido.cliente.data_criacao, iso=True),
-                phone=self.telefone,
-                identification=self.identificacao,
-                address=PayerAddress(
-                    street_name=self.pedido.cliente.endereco.endereco,
-                    street_number=self.pedido.cliente.endereco.numero,
-                    zip_code=self.pedido.cliente.endereco.cep,
-                )
-            ),
-            back_urls=BackUrls(
-                success="{}/success?next_url={}".format(notification_url, self.dados["next_url"]),
-                pending="{}/pending?next_url={}".format(notification_url, self.dados["next_url"]),
-                failure="{}/failure?next_url={}".format(notification_url, self.dados["next_url"])
-            ),
-            shipments=Shipments(
-                receiver_address=ReceiverAddress(
-                    street_name=self.pedido.endereco_entrega.endereco,
-                    street_number=self.pedido.endereco_entrega.numero,
-                    apartment=self.pedido.endereco_entrega.complemento,
-                    zip_code=self.pedido.endereco_entrega.cep,
-                )
-            ),
-            items=self.items
-        )
-        parametros = ParametrosMercadoPago("mercadopago", id=self.pedido.conta.id)
-        try:
-            sponsor_id = int(parametros.sponsor_id)
-        except (AttributeError, ValueError):
-            sponsor_id = None
-        if sponsor_id:
-            preferencia.define_valor_de_atributo(Atributo("sponsor_id"), {"sponsor_id": sponsor_id})
-        return preferencia.to_dict()
+        self.url = "https://ws.{}pagseguro.uol.com.br/v2/checkout".format(self.sandbox)
+        self.grava_identificador = False
+        self.envio_por_querystring = True
+        self.headers = {"Content-Type": "application/x-www-form-urlencoded; charset=ISO-8859-1"}
+        for item in range(0, len(self.pedido.itens.all())):
+            Checkout.cria_item(item)
 
     @property
-    def identificacao(self):
-        if self.pedido.cliente.endereco.tipo == "PF":
-            return Identification(type="CPF", number=self.pedido.cliente.endereco.cpf)
-        else:
-            return Identification(type="CNPJ", number=self.pedido.cliente.endereco.cnpj)
+    def sandbox(self):
+        return ""
+        # return "sandbox." if settings.DEBUG else ""
 
     @property
     def telefone(self):
@@ -78,43 +49,68 @@ class EnviarPedido(Enviar):
         elif self.pedido.cliente.telefone_celular:
             telefone = self.pedido.cliente.telefone_celular
         if telefone:
-            numero = self.formatador.converte_tel_em_tupla_com_ddd(telefone)
-            return Phone(area_code=numero[0], number=numero[1])
-        return ''
+            return self.formatador.converte_tel_em_tupla_com_ddd(telefone)
+        return '', ''
 
-    @property
-    def items(self):
-        items = [
-            Item(
-                id=item.sku,
-                title=item.nome,
-                currency_id="BRL",
-                unit_price=self.formatador.formata_decimal(item.preco_venda, como_float=True),
-                quantity=self.formatador.formata_decimal(item.quantidade, como_float=True),
-                category_id="others",
-                picture_url=self.obter_url_da_imagem(item)
-            )
-            for item in self.pedido.itens.all()
-        ]
-        items.append(Item(title="Frete", quantity=1, currency_id="BRL", unit_price=self.formatador.formata_decimal(self.pedido.valor_envio, como_float=True)))
-        return items
+    def gerar_dados_de_envio(self):
+        notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta.id)
+        parametros = ParametrosPagSeguro(conta_id=self.pedido.conta.id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
+        numero_telefone = self.telefone
+        envio = self.pedido.pedido_envio.envio
+        checkout = Checkout(
+            app_key=parametros.app_secret,
+            app_id=parametros.app_id,
+            currency="BRL",
+            reference=self.pedido.numero,
+            notification_url=notification_url,
+            redirect_url="{}/success?next_url={}&referencia={}".format(notification_url, self.dados["next_url"], self.pedido.numero),
+
+            sender_name=self.pedido.cliente.nome,
+            sender_area_code=numero_telefone[0],
+            sender_phone=numero_telefone[1],
+            sender_email=self.formatador.trata_email_com_mais(self.pedido.cliente.email),
+
+            shipping_type=TipoEnvio(envio.codigo).valor,
+            shipping_cost=self.formatador.formata_decimal(self.pedido.valor_envio),
+            shipping_address_street=self.pedido.endereco_entrega.endereco,
+            shipping_address_number=self.pedido.endereco_entrega.numero,
+            shipping_address_complement=self.pedido.endereco_entrega.complemento,
+            shipping_address_district=self.pedido.endereco_entrega.bairro,
+            shipping_address_postal_code=self.pedido.endereco_entrega.cep,
+            shipping_address_city=self.pedido.endereco_entrega.cidade,
+            shipping_address_state=self.pedido.endereco_entrega.estado,
+            shipping_address_country="BRA"
+
+        )
+        for indice, item in enumerate(self.pedido.itens.all()):
+            self.define_valor_de_atributo_de_item(checkout, "Id", indice, item.sku[:100])
+            self.define_valor_de_atributo_de_item(checkout, "Description", indice, item.nome[:100])
+            self.define_valor_de_atributo_de_item(checkout, "Amount", indice, self.formatador.formata_decimal(item.preco_venda))
+            self.define_valor_de_atributo_de_item(checkout, "Quantity", indice, self.formatador.formata_decimal(item.quantidade, como_int=True))
+        return checkout.to_dict()
+
+    def define_valor_de_atributo_de_item(self, checkout, atributo, indice, valor):
+        indice += 1
+        nome = "item{}{}".format(atributo, indice)
+        atributo = "item_{}{}".format(atributo, indice)
+        checkout.define_valor_de_atributo(nome, {atributo.lower(): valor})
 
     def obter_situacao_do_pedido(self, status_requisicao):
         return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
 
     def processar_resposta(self, resposta):
-        retorno = json.loads(resposta.content)
         if resposta.status_code == 401:
-            reenviar = retorno["message"] == "expired_token"
-            return {"content": retorno["message"], "status": 401 if reenviar else 400, "reenviar": reenviar}
-        if resposta.status_code == 400:
-            reenviar = retorno["error"] == "invalid_access_token"
-            return {"content": retorno["message"], "status": 401 if reenviar else 400, "reenviar": reenviar}
+            return {"content": {"mensagem": u"Autorização da plataforma falhou em {}".format(self.url)}, "status": resposta.status_code, "reenviar": False}
+        retorno = self.formatador.xml_para_dict(resposta.content)
         if resposta.status_code in (201, 200):
-            return {"content": {"url": retorno["init_point"]}, "status": 200, "reenviar": False, "identificador": retorno["id"]}
-        return {"content": retorno, "status": resposta.status_code, "reenviar": False}
+            url = "https://{}pagseguro.uol.com.br/v2/checkout/payment.html?code={}".format(self.sandbox, retorno["checkout"]["code"])
+            return {"content": {"url": url}, "status": 200, "reenviar": False}
+        mensagem = []
+        if "errors" in retorno:
+            if type(retorno["errors"]) is list:
+                for erro in retorno["errors"]:
+                    mensagem.append("{} - {}".format(erro["error"]["code"], erro["error"]["message"]))
+            else:
+                mensagem.append("{} - {}".format(retorno["errors"]["code"], retorno["errors"]["message"]))
 
-    def obter_url_da_imagem(self, item):
-        if item.produto.cache_imagem_principal and item.produto.cache_imagem_principal.caminho:
-            return "{}800x800/{}".format(MEDIA_URL, item.produto.cache_imagem_principal.caminho)
-        return ""
+        return {"content": {"mensagem": ", ".join(mensagem)}, "status": resposta.status_code, "reenviar": False}

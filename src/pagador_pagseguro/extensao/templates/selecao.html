@@ -15,7 +15,7 @@
                                 <input type="radio" name="forma_pagamento" id="radio-{{ pagamento.codigo }}" {% if forma_pagamento == pagamento.id|stringformat:"s" %}checked="checked"{% endif %} value="{{ pagamento.id }}">
                               </span>
                               <span class="forma-conteiner text-right">
-                                <img src="{{ STATIC_URL }}novo-template/img/bandeiras/mercadopago.png" title="Pague com Mercado Pago" alt="Pague com Mercado Pago" />
+                                <img src="{{ STATIC_URL }}novo-template/img/bandeiras/pagseguro.png" title="Pague com Mercado Pago" alt="Pague com Mercado Pago" />
                               </span>
                             </label>
                             <div id="escolha-{{ pagamento.codigo }}" class="collapse">
@@ -23,10 +23,13 @@
                                 <ul class="bandeiras-pagamento">
                                     <li><i class="icone-pagamento visa" title="Visa"></i></li>
                                     <li><i class="icone-pagamento mastercard" title="Mastercard"></i></li>
+                                    <li><i class="icone-pagamento hipercard" title="Hipercard"></i></li>
                                     <li><i class="icone-pagamento amex" title="Amex"></i></li>
                                     <li><i class="icone-pagamento elo" title="Elo"></i></li>
-                                    <li><i class="icone-pagamento hipercard" title="Hipercard"></i></li>
-                                    <li><i class="icone-pagamento boleto" title="Hipercard"></i></li>
+                                    <li><i class="icone-pagamento boleto" title="Boleto"></i></li>
+                                    <li><i class="icone-pagamento itau" title="Itaú"></i></li>
+                                    <li><i class="icone-pagamento bradesco" title="Bradesco"></i></li>
+                                    <li><i class="icone-pagamento banco-do-brasil" title="Banco do Brasil"></i></li>
                                 </ul>
                                 <div class="text-right">
                                   <span>Valor</span>

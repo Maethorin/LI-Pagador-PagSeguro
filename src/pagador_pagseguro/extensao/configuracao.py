@@ -48,7 +48,7 @@ class MeioPagamentoEnvio(object):
 
     @property
     def mensagens(self):
-        return Script(tipo=TipoScript.html, caminho_arquivo=caminho_do_arquivo_de_template("mensagens.html"))
+        return Script(tipo=TipoScript.html, caminho_arquivo=caminho_do_arquivo_de_template("mensagens.html"), eh_template=True)
 
     def to_dict(self):
         return [

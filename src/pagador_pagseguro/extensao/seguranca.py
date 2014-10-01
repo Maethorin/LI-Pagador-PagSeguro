@@ -33,6 +33,10 @@ class Credenciador(autenticador.Credenciador):
     def _atualiza_credenciais(self):
         self.codigo_autorizacao = getattr(self.configuracao, "codigo_autorizacao", "")
 
+    @property
+    def chave(self):
+        return "authorizationCode"
+
     def obter_credenciais(self):
         self._atualiza_credenciais()
         return self.codigo_autorizacao
@@ -82,13 +86,12 @@ class Instalador(InstaladorBase):
             'appId': self.parametros.app_id,
         }
         url_autorizacao = 'https://ws.{}pagseguro.uol.com.br/v2/authorizations/request?{}'.format(self.sandbox, urlencode(dados_autorizacao))
-        dados = self.dict_to_xml(dados)
+        dados = self.formatador.dict_para_xml(dados)
         print "\n\n\n{}\n\n\n".format(dados)
         reponse_code = requests.post(url_autorizacao, data=dados, headers={"Content-Type": "application/xml; charset=ISO-8859-1"})
-        # reponse_code = requests.post(url_autorizacao, data=dados)
         if reponse_code.status_code != 200:
             raise InstalacaoNaoFinalizada(u"Erro ao entrar em contato com o PagSeguro. Código: {} - Resposta: {}".format(reponse_code.status_code, reponse_code.content))
-        code = self.xml_to_dict(reponse_code.content)["code"]
+        code = self.formatador.xml_para_dict(reponse_code.content)["authorizationRequest"]["code"]
         return "https://{}pagseguro.uol.com.br/v2/authorization/request.jhtml?code={}".format(self.sandbox, code)
 
     def obter_dados(self, dados):
@@ -107,7 +110,7 @@ class Instalador(InstaladorBase):
         url = "https://ws.pagseguro.uol.com.br/v2/authorizations/notifications/{}/?{}".format(notification_code, urlencode(dados))
         resposta = requests.get(url)
         if resposta.status_code == 200:
-            return self.xml_to_dict(resposta.content)
+            return self.formatador.xml_para_dict(resposta.content)
         return {"erro": resposta.content}
 
     def dados_de_instalacao(self, dados):
@@ -115,36 +118,9 @@ class Instalador(InstaladorBase):
         if "erro" in dados_instalacao:
             raise InstalacaoNaoFinalizada(dados_instalacao["erro"])
         return {
-            "codigo_autorizacao": dados_instalacao["code"],
+            "codigo_autorizacao": dados_instalacao["authorization"]["code"],
             "aplicacao": ("pagseguro-alternativo" if self.usa_alt else "pagseguro")
         }
 
     def desinstalar(self, dados):
         return {"redirect": "https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml"}
-
-    def dict_to_xml(self, dados, tem_cabecalho=False):
-        if not type(dados) is dict:
-            return ""
-        if not dados:
-            return ""
-        documento = []
-        if not tem_cabecalho:
-            documento = ['<?xml version="1.0" encoding="UTF-8" standalone="yes"?>']
-        for chave, valor in dados.iteritems():
-            documento.append("<{}>".format(chave))
-            if type(valor) is dict:
-                documento.append(self.dict_to_xml(valor, True))
-            elif type(valor) is list:
-                for parte in valor:
-                    documento.append(self.dict_to_xml(parte, True))
-            else:
-                documento.append(unicode(valor))
-            documento.append("</{}>".format(chave))
-        return "".join(documento)
-
-    def xml_to_dict(self, content):
-        root = ElementTree.fromstring(content)
-        resultado = {}
-        for child in root:
-            resultado[child.tag] = child.text
-        return resultado
