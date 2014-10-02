@@ -30,7 +30,8 @@ class Registro(RegistroBase):
 
     @property
     def url(self):
-        return "https://ws.{}pagseguro.uol.com.br/v3/transactions/{}".format(self.sandbox, self.dados["transacao"])
+        end_point = "" if "transacao" in self.dados else "/notifications"
+        return "https://ws.{}pagseguro.uol.com.br/v3/transactions{}/{}".format(self.sandbox, end_point, self.identificador_id)
 
     @property
     def pedido_numero(self):
@@ -42,6 +43,8 @@ class Registro(RegistroBase):
     def identificador_id(self):
         if self.retorno_de_requisicao:
             return self.dados["transacao"]
+        if "notificationCode" in self.dados:
+            return self.dados["notificationCode"]
         return self.dados["transaction"]["code"]
 
     @property
@@ -86,7 +89,7 @@ class Registro(RegistroBase):
 
     @property
     def obter_dados_do_gateway(self):
-        return "transacao" in self.dados
+        return "transacao" in self.dados or "notificationCode" in self.dados
 
     @property
     def redireciona_para(self):
