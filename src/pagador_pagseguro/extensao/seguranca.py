@@ -64,8 +64,8 @@ class Instalador(InstaladorBase):
 
     @property
     def sandbox(self):
-        return ""
-        # return "sandbox." if settings.DEBUG else ""
+        # return ""
+        return "sandbox." if settings.DEBUG else ""
 
     def url_ativador(self, parametros_redirect):
         self._parametros = None
@@ -87,7 +87,6 @@ class Instalador(InstaladorBase):
         }
         url_autorizacao = 'https://ws.{}pagseguro.uol.com.br/v2/authorizations/request?{}'.format(self.sandbox, urlencode(dados_autorizacao))
         dados = self.formatador.dict_para_xml(dados)
-        print "\n\n\n{}\n\n\n".format(dados)
         reponse_code = requests.post(url_autorizacao, data=dados, headers={"Content-Type": "application/xml; charset=ISO-8859-1"})
         if reponse_code.status_code != 200:
             raise InstalacaoNaoFinalizada(u"Erro ao entrar em contato com o PagSeguro. Código: {} - Resposta: {}".format(reponse_code.status_code, reponse_code.content))
@@ -107,7 +106,7 @@ class Instalador(InstaladorBase):
         })
         notification_code = dados["notificationCode"]
         del dados["notificationCode"]
-        url = "https://ws.pagseguro.uol.com.br/v2/authorizations/notifications/{}/?{}".format(notification_code, urlencode(dados))
+        url = "https://ws.{}pagseguro.uol.com.br/v2/authorizations/notifications/{}/?{}".format(self.sandbox, notification_code, urlencode(dados))
         resposta = requests.get(url)
         if resposta.status_code == 200:
             return self.formatador.xml_para_dict(resposta.content)
@@ -123,4 +122,4 @@ class Instalador(InstaladorBase):
         }
 
     def desinstalar(self, dados):
-        return {"redirect": "https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml"}
+        return {"redirect": "https://{}pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml".format(self.sandbox)}

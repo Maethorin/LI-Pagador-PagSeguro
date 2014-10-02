@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 import json
+from pagador import settings
 from pagador.retorno.models import SituacaoPedido
 from pagador.retorno.registro import RegistroBase
+from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
 
 
 class SituacoesDePagamento(object):
-    aprovado = "approved"
-    pendente = "pending"
-    em_andamento = "in_process"
-    rejeitado = "rejected"
-    devolvido = "refunded"
-    cancelado = "cancelled"
-    em_mediacao = "in_mediation"
-    charged_back = "charged_back"
+    aguardando = "1"
+    em_analise = "2"
+    paga = "3"
+    em_disputa = "5"
+    devolvido = "6"
+    cancelado = "7"
+    charged_back = "8"
 
     @classmethod
     def do_tipo(cls, tipo):
@@ -20,56 +21,53 @@ class SituacoesDePagamento(object):
 
 
 class Registro(RegistroBase):
-    def __init__(self, dados, tipo="retorno"):
-        super(Registro, self).__init__(dados)
+    def __init__(self, dados, tipo="retorno", configuracao=None):
+        super(Registro, self).__init__(dados, configuracao)
         self.exige_autenticacao = True
         self.processa_resposta = True
         self.tipo = tipo
-        self.envio_por_querystring = False
+        self.envio_por_querystring = True
 
     @property
     def url(self):
-        return "https://api.mercadolibre.com/collections/notifications/{}".format(self.dados["id"])
+        return "https://ws.{}pagseguro.uol.com.br/v3/transactions/{}".format(self.sandbox, self.dados["transacao"])
 
     @property
     def pedido_numero(self):
-        if self.retorno_de_notificacao:
-            return self.dados["collection"]["external_reference"]
-        return self.dados["external_reference"]
+        if self.retorno_de_requisicao:
+            return self.dados["referencia"]
+        return self.dados["transaction"]["reference"]
 
     @property
     def identificador_id(self):
-        if self.retorno_de_notificacao:
+        if self.retorno_de_requisicao:
             return self.dados["transacao"]
-        return None
+        return self.dados["transaction"]["code"]
+
+    @property
+    def grava_identificador(self):
+        return True
 
     def __getattr__(self, name):
         if name.startswith("situacao_"):
             tipo = name.replace("situacao_", "")
-            if self.retorno_de_requisicao:
-                if tipo != "aprovado" and tipo != "pendente":
-                    return False
-                if self.dados["collection_status"] is None:
-                    return False
-                return self.dados["collection_status"] == SituacoesDePagamento.do_tipo(tipo)
-            if self.retorno_de_notificacao:
-                return self.dados["collection"]["status"] == SituacoesDePagamento.do_tipo(tipo)
+            return self.dados["transaction"]["status"] == SituacoesDePagamento.do_tipo(tipo)
         return object.__getattribute__(self, name)
 
     @property
     def situacao_do_pedido(self):
-        if self.situacao_aprovado:
-            return SituacaoPedido.SITUACAO_PEDIDO_PAGO
-        if self.situacao_em_andamento or self.situacao_pendente:
-            return SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE
-        if self.situacao_rejeitado:
+        if self.situacao_aguardando:
             return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
+        if self.situacao_em_analise:
+            return SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE
+        if self.situacao_paga:
+            return SituacaoPedido.SITUACAO_PEDIDO_PAGO
+        if self.situacao_em_disputa:
+            return SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA
         if self.situacao_devolvido:
             return SituacaoPedido.SITUACAO_PAGTO_DEVOLVIDO
         if self.situacao_cancelado:
             return SituacaoPedido.SITUACAO_PEDIDO_CANCELADO
-        if self.situacao_em_mediacao:
-            return SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA
         if self.situacao_charged_back:
             return SituacaoPedido.SITUACAO_PAGTO_CHARGEBACK
         return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
@@ -80,29 +78,40 @@ class Registro(RegistroBase):
 
     @property
     def retorno_de_requisicao(self):
-        return "collection_status" in self.dados
+        return self.tipo == "success"
 
     @property
     def retorno_de_notificacao(self):
-        return "collection" in self.dados
+        return self.tipo == "retorno"
 
     @property
     def obter_dados_do_gateway(self):
-        return "topic" in self.dados and self.dados["topic"] == "payment"
+        return "transacao" in self.dados
 
     @property
     def redireciona_para(self):
         if "next_url" in self.dados:
-            return "{}?{}=1".format(self.dados["next_url"], self.tipo)
+            tipo = self.tipo
+            if self.situacao_aguardando or self.situacao_em_analise:
+                tipo = 'pending'
+            if self.situacao_cancelado:
+                tipo = 'failure'
+            return "{}?{}=1".format(self.dados["next_url"], tipo)
         return None
 
     def processar_resposta(self, resposta):
-        retorno = json.loads(resposta.content)
-        if resposta.status_code == 401:
-            reenviar = retorno["message"] == "expired_token"
-            return {"content": retorno["message"], "status": 401 if reenviar else 400, "reenviar": reenviar}
-        if resposta.status_code == 400:
-            reenviar = retorno["error"] == "invalid_access_token"
-            return {"content": retorno["message"], "status": 401 if reenviar else 400, "reenviar": reenviar}
+        retorno = self.formatador.xml_para_dict(resposta.content)
         return {"content": retorno, "status": resposta.status_code, "reenviar": False}
 
+    @property
+    def sandbox(self):
+        # return ""
+        return "sandbox." if settings.DEBUG else ""
+
+    def gerar_dados_de_envio(self):
+        usa_alt = self.configuracao.aplicacao == 'pagseguro-alternativo'
+        parametros = ParametrosPagSeguro(self.dados["conta_id"], usa_alt)
+        return {
+            "appKey": parametros.app_secret,
+            "appId": parametros.app_id,
+        }

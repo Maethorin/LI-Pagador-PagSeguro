@@ -36,8 +36,8 @@ class EnviarPedido(Enviar):
 
     @property
     def sandbox(self):
-        return ""
-        # return "sandbox." if settings.DEBUG else ""
+        # return ""
+        return "sandbox." if settings.DEBUG else ""
 
     @property
     def telefone(self):
