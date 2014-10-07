@@ -36,7 +36,12 @@ $(function() {
                         exibeMensagemErro(data.status, "Ocorreu um erro ao enviar os dados para o PagSeguro. Por favor, tente de novo");
                     }
                     else {
-                        exibeMensagemErro(data.status, data.content);
+                        if ('{{ settings.DEBUG }}' == 'True') {
+                            exibeMensagemErro(data.status, data.content);
+                        }
+                        else {
+                            exibeMensagemErro(data.status, "Ocorreu um erro ao enviar sua solicitação. Se o erro persistir, contate nosso SAC.");
+                        }
                     }
                 }
             });
