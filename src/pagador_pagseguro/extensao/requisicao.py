@@ -53,8 +53,8 @@ class EnviarPedido(Enviar):
         return '', ''
 
     def gerar_dados_de_envio(self):
-        notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta.id)
-        parametros = ParametrosPagSeguro(conta_id=self.pedido.conta.id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
+        notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
+        parametros = ParametrosPagSeguro(conta_id=self.pedido.conta_id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
         numero_telefone = self.telefone
         envio = self.pedido.pedido_envio.envio
         checkout = Checkout(
