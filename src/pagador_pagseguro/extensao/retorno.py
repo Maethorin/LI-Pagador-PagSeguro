@@ -108,8 +108,7 @@ class Registro(RegistroBase):
 
     @property
     def sandbox(self):
-        # return ""
-        return "sandbox." if settings.DEBUG else ""
+        return "sandbox." if (settings.ENVIRONMENT == "local" or settings.ENVIRONMENT == "development") else ""
 
     def gerar_dados_de_envio(self):
         usa_alt = self.configuracao.aplicacao == 'pagseguro-alternativo'

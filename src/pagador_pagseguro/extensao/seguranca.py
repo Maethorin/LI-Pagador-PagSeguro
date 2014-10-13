@@ -64,8 +64,7 @@ class Instalador(InstaladorBase):
 
     @property
     def sandbox(self):
-        # return ""
-        return "sandbox." if settings.DEBUG else ""
+        return "sandbox." if (settings.ENVIRONMENT == "local" or settings.ENVIRONMENT == "development") else ""
 
     def url_ativador(self, parametros_redirect):
         self._parametros = None
