@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
 from pagador import settings
+from pagador.acesso.externo import FormatoDeEnvio
 from pagador.envio.requisicao import Enviar
 from pagador.retorno.models import SituacaoPedido
 from pagador.settings import PAGSEGURO_PREFERENCE_NOTIFICATION_URL
@@ -29,7 +29,7 @@ class EnviarPedido(Enviar):
         self.processa_resposta = True
         self.url = "https://ws.{}pagseguro.uol.com.br/v2/checkout".format(self.sandbox)
         self.grava_identificador = False
-        self.envio_por_querystring = True
+        self.formato_de_envio = FormatoDeEnvio.querystring
         self.headers = {"Content-Type": "application/x-www-form-urlencoded; charset=ISO-8859-1"}
         for item in range(0, len(self.pedido.itens.all())):
             Checkout.cria_item(item)

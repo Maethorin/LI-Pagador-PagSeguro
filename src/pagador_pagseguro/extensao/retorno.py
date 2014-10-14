@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import json
 from pagador import settings
+from pagador.acesso.externo import FormatoDeEnvio
 from pagador.retorno.models import SituacaoPedido
 from pagador.retorno.registro import RegistroBase
 from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
@@ -26,7 +26,7 @@ class Registro(RegistroBase):
         self.exige_autenticacao = True
         self.processa_resposta = True
         self.tipo = tipo
-        self.envio_por_querystring = True
+        self.formato_de_envio = FormatoDeEnvio.querystring
 
     @property
     def url(self):
