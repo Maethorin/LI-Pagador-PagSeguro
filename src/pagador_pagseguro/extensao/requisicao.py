@@ -2,7 +2,6 @@
 from pagador import settings
 from pagador.acesso.externo import FormatoDeEnvio
 from pagador.envio.requisicao import Enviar
-from pagador.retorno.models import SituacaoPedido
 from pagador.settings import PAGSEGURO_PREFERENCE_NOTIFICATION_URL
 
 from pagador_pagseguro.extensao.envio import Checkout
@@ -95,7 +94,7 @@ class EnviarPedido(Enviar):
         checkout.define_valor_de_atributo(nome, {atributo.lower(): valor})
 
     def obter_situacao_do_pedido(self, status_requisicao):
-        return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
+        return None
 
     def processar_resposta(self, resposta):
         if resposta.status_code == 401:
