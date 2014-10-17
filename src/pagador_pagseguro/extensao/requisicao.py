@@ -69,7 +69,7 @@ class EnviarPedido(Enviar):
             sender_email=self.formatador.trata_email_com_mais(self.pedido.cliente.email),
 
             shipping_type=TipoEnvio(envio.codigo).valor,
-            shipping_cost=self.formatador.formata_decimal(self.pedido.valor_envio),
+            shipping_cost=self.formatador.formata_decimal(self.valor_envio),
             shipping_address_street=unicode(self.pedido.endereco_entrega.endereco),
             shipping_address_number=self.pedido.endereco_entrega.numero,
             shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento),
