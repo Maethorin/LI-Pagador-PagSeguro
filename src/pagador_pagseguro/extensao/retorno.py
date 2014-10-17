@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from pagador import settings
-from pagador.acesso.externo import FormatoDeEnvio
+from pagador.acesso.externo import FormatoDeEnvio, TipoMetodo
 from pagador.retorno.models import SituacaoPedido
 from pagador.retorno.registro import RegistroBase
 from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
@@ -27,6 +27,7 @@ class Registro(RegistroBase):
         self.processa_resposta = True
         self.tipo = tipo
         self.formato_de_envio = FormatoDeEnvio.querystring
+        self.metodo_request = TipoMetodo.get
 
     @property
     def url(self):
@@ -49,11 +50,13 @@ class Registro(RegistroBase):
 
     @property
     def grava_identificador(self):
-        return True
+        return self.obter_dados_do_gateway
 
     def __getattr__(self, name):
         if name.startswith("situacao_"):
             tipo = name.replace("situacao_", "")
+            if not self.obter_dados_do_gateway:
+                return tipo == "cancelado"
             return self.dados["transaction"]["status"] == SituacoesDePagamento.do_tipo(tipo)
         return object.__getattribute__(self, name)
 
@@ -77,7 +80,7 @@ class Registro(RegistroBase):
 
     @property
     def alterar_situacao(self):
-        return True
+        return self.obter_dados_do_gateway
 
     @property
     def retorno_de_requisicao(self):
