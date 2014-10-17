@@ -19,10 +19,17 @@ class MeioPagamentoCadastro(CadastroBase):
         script.adiciona_linha(u'<a href="//pagseguro.uol.com.br/" title="Criar conta PagSeguro" class="btn btn-info btn-xs" target="_blank">cadastre-se</a>')
         return script
 
+    @property
+    def descricao(self):
+        script = Script(tipo=TipoScript.html, nome="descricao")
+        script.adiciona_linha(u'<small>A integração com o PagSeguro gera custos de operação que são repassados para a plataforma pelo PagSeguro (1%). O lojista não paga comissão para a plataforma. Isso não altera o valor da taxa cobrada às lojas pelo PagSeguro pelas transações, de 4,79% + R$0,40 (taxa exclusiva para transações através da plataforma).</small>')
+        return script
+
     def to_dict(self):
         return {
             "html": [
                 self.registro.to_dict(),
+                self.descricao.to_dict(),
             ]
         }
 
