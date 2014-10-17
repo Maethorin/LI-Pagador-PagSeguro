@@ -56,7 +56,7 @@ class Registro(RegistroBase):
         if name.startswith("situacao_"):
             tipo = name.replace("situacao_", "")
             if not self.obter_dados_do_gateway:
-                return tipo == "cancelado"
+                return tipo == "aguardando"
             return self.dados["transaction"]["status"] == SituacoesDePagamento.do_tipo(tipo)
         return object.__getattribute__(self, name)
 
