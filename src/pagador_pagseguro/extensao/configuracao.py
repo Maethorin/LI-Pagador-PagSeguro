@@ -22,8 +22,10 @@ class MeioPagamentoCadastro(CadastroBase):
     @property
     def descricao(self):
         script = Script(tipo=TipoScript.html, nome="descricao")
-        script.adiciona_linha(u'<small>A integração com o PagSeguro gera custos de operação que são repassados para a plataforma pelo PagSeguro (1%). O lojista não paga comissão para a plataforma. Isso não altera o valor da taxa cobrada às lojas pelo PagSeguro pelas transações, de 4,79% + R$0,40 (taxa exclusiva para transações através da plataforma).</small>')
-        return script
+        script.adiciona_linha(u'<p>Para que o PagSeguro funcione corretamenteo, siga o seguintes passos:</p>')
+        script.adiciona_linha(u'<p>1. Tenha uma conta no PagSeguro do tipo Vendedor. <a href="https://pagseguro.uol.com.br/account/viewDetails.jhtml" target="_blank">Clique aqui</a> para fazer a mudança;</p>')
+        script.adiciona_linha(u'<p>2. No PagSeguro, entre no menu <strong>Preferências -> Frete</strong> e depois marque a opção <strong>Frete adicional com valor fixo</strong> e coloque o valor de <strong>R$ 0,00 reais</strong> e clique em <strong>CONFIRMAR</strong> no final da página.</p>')
+        script.adiciona_linha(u'<small>A integração com o PagSeguro gera custos de operação que são repassados para a plataforma pelo PagSeguro (1%). O lojista não paga comissão para a plataforma. Isso não altera o valor da taxa cobrada às lojas pelo PagSeguro pelas transações, de 4,79% + R$0,40 (taxa exclusiva para transações através da plataforma).</small>')        return script
 
     def to_dict(self):
         return {
