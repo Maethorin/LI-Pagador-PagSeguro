@@ -63,26 +63,26 @@ class EnviarPedido(Enviar):
             notification_url=notification_url,
             redirect_url="{}/success?next_url={}&referencia={}".format(notification_url, self.dados["next_url"], self.pedido.numero),
 
-            sender_name=self.pedido.cliente.nome,
+            sender_name=unicode(self.pedido.cliente.nome),
             sender_area_code=numero_telefone[0],
             sender_phone=numero_telefone[1],
             sender_email=self.formatador.trata_email_com_mais(self.pedido.cliente.email),
 
             shipping_type=TipoEnvio(envio.codigo).valor,
             shipping_cost=self.formatador.formata_decimal(self.pedido.valor_envio),
-            shipping_address_street=self.pedido.endereco_entrega.endereco,
+            shipping_address_street=unicode(self.pedido.endereco_entrega.endereco),
             shipping_address_number=self.pedido.endereco_entrega.numero,
-            shipping_address_complement=self.pedido.endereco_entrega.complemento,
-            shipping_address_district=self.pedido.endereco_entrega.bairro,
+            shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento),
+            shipping_address_district=unicode(self.pedido.endereco_entrega.bairro),
             shipping_address_postal_code=self.pedido.endereco_entrega.cep,
-            shipping_address_city=self.pedido.endereco_entrega.cidade,
+            shipping_address_city=unicode(self.pedido.endereco_entrega.cidade),
             shipping_address_state=self.pedido.endereco_entrega.estado,
             shipping_address_country="BRA"
 
         )
         for indice, item in enumerate(self.pedido.itens.all()):
-            self.define_valor_de_atributo_de_item(checkout, "Id", indice, item.sku[:100])
-            self.define_valor_de_atributo_de_item(checkout, "Description", indice, item.nome[:100])
+            self.define_valor_de_atributo_de_item(checkout, "Id", indice, unicode(item.sku[:100]))
+            self.define_valor_de_atributo_de_item(checkout, "Description", indice, unicode(item.nome[:100]))
             self.define_valor_de_atributo_de_item(checkout, "Amount", indice, self.formatador.formata_decimal(item.preco_venda))
             self.define_valor_de_atributo_de_item(checkout, "Quantity", indice, self.formatador.formata_decimal(item.quantidade, como_int=True))
         return checkout.to_dict()
