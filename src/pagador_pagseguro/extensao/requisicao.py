@@ -52,7 +52,7 @@ class EnviarPedido(Enviar):
 
     @property
     def nome_do_cliente(self):
-        if len(self.pedido.cliente.nome.split(" ")) == 0:
+        if len(self.pedido.cliente.nome.split(" ")) < 2:
             return u"{} x".format(self.pedido.cliente.nome)[:50]
         return unicode(self.pedido.cliente.nome[:50])
 
