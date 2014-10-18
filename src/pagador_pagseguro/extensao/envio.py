@@ -7,7 +7,7 @@ class Checkout(EntidadeSerializavel):
         Atributo("appId"), Atributo("appKey"), Atributo("currency"), Atributo("reference"), Atributo("senderName"), Atributo("senderAreaCode"),  Atributo("senderPhone"),
         Atributo("senderEmail"), Atributo("shippingType"), Atributo("shippingAddressStreet"), Atributo("shippingAddressNumber"), Atributo("shippingAddressComplement"),
         Atributo("shippingAddressDistrict"), Atributo("shippingAdressPostalCode"), Atributo("shippingAdressCity"), Atributo("shippingAdressState"), Atributo("shippingAdressCountry"),
-        Atributo("shippingCost"), Atributo("redirectURL"), Atributo("notificationURL"),
+        Atributo("shippingCost"), , Atributo("extraAmount"), Atributo("redirectURL"), Atributo("notificationURL")
     ]
 
     @classmethod

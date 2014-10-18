@@ -109,7 +109,7 @@ class Instalador(InstaladorBase):
         resposta = requests.get(url)
         if resposta.status_code == 200:
             return self.formatador.xml_para_dict(resposta.content)
-        return {"erro": resposta.content}
+        return {"xerro": resposta.content}
 
     def dados_de_instalacao(self, dados):
         dados_instalacao = self.obter_dados(dados)
