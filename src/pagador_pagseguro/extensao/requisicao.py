@@ -113,10 +113,13 @@ class EnviarPedido(Enviar):
             return {"content": {"url": url}, "status": 200, "reenviar": False}
         mensagem = []
         if "errors" in retorno:
-            if type(retorno["errors"]) is list:
-                for erro in retorno["errors"]:
-                    mensagem.append("{} - {}".format(erro["error"]["code"], erro["error"]["message"]))
-            else:
-                mensagem.append("{} - {}".format(retorno["errors"]["code"], retorno["errors"]["message"]))
+
+            # if type(retorno["errors"]) is list:
+            #     for erro in retorno["errors"]:
+            #         mensagem.append("{} - {}".format(erro["error"]["code"], erro["error"]["message"]))
+            # else:
+            #     mensagem.append("{} - {}".format(retorno["errors"]["code"], retorno["errors"]["message"]))
+
+            raise Exception(str(retorno))
 
         return {"content": {"mensagem": ", ".join(mensagem)}, "status": resposta.status_code, "reenviar": False}
