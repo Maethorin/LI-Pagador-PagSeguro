@@ -72,7 +72,7 @@ class EnviarPedido(Enviar):
             shipping_cost=self.formatador.formata_decimal(self.valor_envio),
             shipping_address_street=unicode(self.pedido.endereco_entrega.endereco),
             shipping_address_number=self.pedido.endereco_entrega.numero,
-            shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento),
+            shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento[:40]),
             shipping_address_district=unicode(self.pedido.endereco_entrega.bairro),
             shipping_address_postal_code=self.pedido.endereco_entrega.cep,
             shipping_address_city=unicode(self.pedido.endereco_entrega.cidade),
