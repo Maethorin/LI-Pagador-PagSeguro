@@ -76,7 +76,7 @@ class EnviarPedido(Enviar):
 
             shipping_type=TipoEnvio(envio.codigo).valor,
             shipping_cost=self.formatador.formata_decimal(self.valor_envio),
-            extra_amount=self.formatador.formata_decimal(self.pedido.valor_desconto),
+            extra_amount=self.formatador.formata_decimal((self.pedido.valor_desconto * -1)),
             shipping_address_street=unicode(self.pedido.endereco_entrega.endereco[:80]),
             shipping_address_number=self.pedido.endereco_entrega.numero,
             shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento[:40]),
