@@ -50,6 +50,12 @@ class EnviarPedido(Enviar):
             return self.formatador.converte_tel_em_tupla_com_ddd(telefone)
         return '', ''
 
+    @property
+    def nome_do_cliente(self):
+        if len(self.pedido.cliente.nome.split(" ")) == 0:
+            return u"{} x".format(self.pedido.cliente.nome)[:50]
+        return unicode(self.pedido.cliente.nome[:50])
+
     def gerar_dados_de_envio(self):
         notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
         parametros = ParametrosPagSeguro(conta_id=self.pedido.conta_id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
@@ -63,19 +69,19 @@ class EnviarPedido(Enviar):
             notification_url=notification_url,
             redirect_url="{}/success?next_url={}&referencia={}".format(notification_url, self.dados["next_url"], self.pedido.numero),
 
-            sender_name=unicode(self.pedido.cliente.nome),
+            sender_name=self.nome_do_cliente,
             sender_area_code=numero_telefone[0],
             sender_phone=numero_telefone[1],
             sender_email=self.formatador.trata_email_com_mais(self.pedido.cliente.email),
 
             shipping_type=TipoEnvio(envio.codigo).valor,
             shipping_cost=self.formatador.formata_decimal(self.valor_envio),
-            shipping_address_street=unicode(self.pedido.endereco_entrega.endereco),
+            shipping_address_street=unicode(self.pedido.endereco_entrega.endereco[:80]),
             shipping_address_number=self.pedido.endereco_entrega.numero,
             shipping_address_complement=unicode(self.pedido.endereco_entrega.complemento[:40]),
-            shipping_address_district=unicode(self.pedido.endereco_entrega.bairro),
+            shipping_address_district=unicode(self.pedido.endereco_entrega.bairro[:60]),
             shipping_address_postal_code=self.pedido.endereco_entrega.cep,
-            shipping_address_city=unicode(self.pedido.endereco_entrega.cidade),
+            shipping_address_city=unicode(self.pedido.endereco_entrega.cidade[:60]),
             shipping_address_state=self.pedido.endereco_entrega.estado,
             shipping_address_country="BRA"
 
