@@ -52,9 +52,10 @@ class EnviarPedido(Enviar):
 
     @property
     def nome_do_cliente(self):
+        nome = self.pedido.cliente.nome
         if len(self.pedido.cliente.nome.split(" ")) < 2:
-            return u"{} x".format(self.pedido.cliente.nome)[:50]
-        return unicode(self.pedido.cliente.nome[:50])
+            nome = u"{} x".format(self.pedido.cliente.nome)
+        return self.formatador.trata_unicode_com_limite(nome, limite=50, ascii=True, trata_espaco_duplo=True)
 
     def gerar_dados_de_envio(self):
         notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
@@ -77,19 +78,19 @@ class EnviarPedido(Enviar):
             shipping_type=TipoEnvio(envio.codigo).valor,
             shipping_cost=self.formatador.formata_decimal(self.valor_envio),
             extra_amount=self.formatador.formata_decimal((self.pedido.valor_desconto * -1)),
-            shipping_address_street=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.endereco, 80),
+            shipping_address_street=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.endereco, 80, ascii=True),
             shipping_address_number=self.pedido.endereco_entrega.numero,
-            shipping_address_complement=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.complemento, 40),
-            shipping_address_district=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.bairro, 60),
+            shipping_address_complement=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.complemento, 40, ascii=True),
+            shipping_address_district=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.bairro, 60, ascii=True),
             shipping_address_postal_code=self.pedido.endereco_entrega.cep,
-            shipping_address_city=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.cidade, 60),
+            shipping_address_city=self.formatador.trata_unicode_com_limite(self.pedido.endereco_entrega.cidade, 60, ascii=True),
             shipping_address_state=self.pedido.endereco_entrega.estado,
             shipping_address_country="BRA"
 
         )
         for indice, item in enumerate(self.pedido.itens.all()):
-            self.define_valor_de_atributo_de_item(checkout, "Id", indice, self.formatador.trata_unicode_com_limite(item.sku, 100))
-            self.define_valor_de_atributo_de_item(checkout, "Description", indice, self.formatador.trata_unicode_com_limite(item.nome, 100))
+            self.define_valor_de_atributo_de_item(checkout, "Id", indice, self.formatador.trata_unicode_com_limite(item.sku, 100, ascii=True))
+            self.define_valor_de_atributo_de_item(checkout, "Description", indice, self.formatador.trata_unicode_com_limite(item.nome, 100, ascii=True))
             self.define_valor_de_atributo_de_item(checkout, "Amount", indice, self.formatador.formata_decimal(item.preco_venda))
             self.define_valor_de_atributo_de_item(checkout, "Quantity", indice, self.formatador.formata_decimal(item.quantidade, como_int=True))
         return checkout.to_dict()
