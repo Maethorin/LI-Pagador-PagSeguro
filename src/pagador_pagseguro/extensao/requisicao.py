@@ -119,7 +119,7 @@ class EnviarPedido(Enviar):
             #         mensagem.append("{} - {}".format(erro["error"]["code"], erro["error"]["message"]))
             # else:
             #     mensagem.append("{} - {}".format(retorno["errors"]["code"], retorno["errors"]["message"]))
-
+            retorno["pedido"] = {"numero": self.pedido.numero, "conta": self.pedido.conta_id}
             raise Exception(str(retorno))
 
         return {"content": {"mensagem": ", ".join(mensagem)}, "status": resposta.status_code, "reenviar": False}
