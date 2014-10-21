@@ -32,8 +32,14 @@ $(function() {
                 }
                 else {
                     if (data.status == 400 || data.status == 401) {
-                        console.log(data.content.mensagem);
                         exibeMensagemErro(data.status, "Ocorreu um erro ao enviar os dados para o PagSeguro. Por favor, tente de novo");
+                    }
+                    else if (data.status == 404) {
+                        var fatal = false;
+                        if (data.content.hasOwnProperty("fatal")) {
+                            fatal = data.content.fatal;
+                        }
+                        exibeMensagemErro(data.status, data.content.mensagem, fatal);
                     }
                     else {
                         if ('{{ settings.DEBUG }}' == 'True') {
@@ -55,12 +61,16 @@ $(function() {
         window.location = url;
     });
 
-    function exibeMensagemErro(status, mensagem) {
+    function exibeMensagemErro(status, mensagem, fatal) {
         $pagSeguroMensagem.find(".msg-warning").hide();
         $pagSeguroMensagem.toggleClass("alert-message-warning alert-message-danger");
         var $errorMessage = $("#errorMessage");
         $errorMessage.text(status + ": " + mensagem);
         $pagSeguroMensagem.find(".msg-danger").show();
+        if (fatal) {
+            $(".pagar").remove();
+            $(".click").remove();
+        }
     }
 
     function exibeMensagemSucesso(situacao) {
