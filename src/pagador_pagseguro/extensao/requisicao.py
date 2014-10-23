@@ -53,6 +53,8 @@ class EnviarPedido(Enviar):
     @property
     def nome_do_cliente(self):
         nome = self.pedido.cliente.nome
+        if nome:
+            nome = nome.strip()
         if len(self.pedido.cliente.nome.split(" ")) < 2:
             nome = u"{} x".format(self.pedido.cliente.nome)
         if "&" in nome:
