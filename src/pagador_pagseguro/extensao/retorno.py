@@ -62,7 +62,7 @@ class Registro(RegistroBase):
         return valores
 
     @property
-    def grava_identificador(self):
+    def deve_gravar_dados_de_pagamento(self):
         return self.obter_dados_do_gateway
 
     def __getattr__(self, name):

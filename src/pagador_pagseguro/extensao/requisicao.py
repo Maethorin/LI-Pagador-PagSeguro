@@ -27,7 +27,7 @@ class EnviarPedido(Enviar):
         self.exige_autenticacao = True
         self.processa_resposta = True
         self.url = "https://ws.{}pagseguro.uol.com.br/v2/checkout".format(self.sandbox)
-        self.grava_identificador = False
+        self.deve_gravar_dados_de_pagamento = False
         self.formato_de_envio = FormatoDeEnvio.querystring
         self.headers = {"Content-Type": "application/x-www-form-urlencoded; charset=ISO-8859-1"}
         for item in range(0, len(self.pedido.itens.all())):
