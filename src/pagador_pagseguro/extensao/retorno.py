@@ -46,7 +46,20 @@ class Registro(RegistroBase):
             return self.dados["transacao"]
         if "notificationCode" in self.dados:
             return self.dados["notificationCode"]
-        return self.dados["transaction"]["code"]
+        return None
+
+    @property
+    def valores_de_pagamento(self):
+        if not "transaction" in self.dados:
+            return {}
+        valores = {
+            "identificador_id": self.identificador_id,
+        }
+        if "code" in self.dados["transaction"]:
+            valores["transacao_id"] = self.dados["transaction"]["code"]
+        if "grossAmount" in self.dados["transaction"]:
+            valores["valor_pago"] = self.dados["transaction"]["grossAmount"]
+        return valores
 
     @property
     def grava_identificador(self):
