@@ -105,6 +105,8 @@ class Registro(RegistroBase):
 
     @property
     def obter_dados_do_gateway(self):
+        if self.dados.get("notificationType", "") == "applicationAuthorization":
+            return False
         return "transacao" in self.dados or "notificationCode" in self.dados
 
     @property
