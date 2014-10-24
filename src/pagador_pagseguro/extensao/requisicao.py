@@ -57,8 +57,10 @@ class EnviarPedido(Enviar):
             nome = nome.strip()
         if len(self.pedido.cliente.nome.split(" ")) < 2:
             nome = u"{} x".format(self.pedido.cliente.nome)
-        if "&" in nome:
+        if "&" in nome or "?" in nome:
             nome = nome.replace("&", "E")
+        if "?" in nome:
+            nome = nome.replace("?", " ")
         return self.formatador.trata_unicode_com_limite(nome, limite=50, ascii=True, trata_espaco_duplo=True)
 
     def gerar_dados_de_envio(self):
