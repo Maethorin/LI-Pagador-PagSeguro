@@ -15,7 +15,7 @@
                 <input type="radio" name="forma_pagamento" id="{% if modo == 'modal' %}modal-{% endif %}radio-pagseguro" {% if forma_pagamento == pagamento.id|stringformat:"s" %}checked="checked"{% endif %} value="1">
             </span>
             <span class="forma-conteiner text-right">
-                <img src="{{ STATIC_URL }}novo-template/img/bandeiras/pagseguro.png" title="Pague com Mercado Pago" alt="Pague com Mercado Pago" />
+                <img src="{{ STATIC_URL }}novo-template/img/bandeiras/pagseguro.png" title="Pague com PagSeguro" alt="Pague com PagSeguro" />
             </span>
         </label>
         <div id="{% if modo == 'modal' %}modal-{% endif %}escolha-pagseguro" class="collapse">
