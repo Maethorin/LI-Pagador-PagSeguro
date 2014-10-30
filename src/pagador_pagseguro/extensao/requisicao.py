@@ -63,7 +63,7 @@ class EnviarPedido(Enviar):
             nome = nome.replace("?", " ")
         return self.formatador.trata_unicode_com_limite(nome, limite=50, ascii=True, trata_espaco_duplo=True)
 
-    def gerar_dados_de_envio(self):
+    def gerar_dados_de_envio(self, passo=None):
         notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
         parametros = ParametrosPagSeguro(conta_id=self.pedido.conta_id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
         numero_telefone = self.telefone
