@@ -7,9 +7,14 @@ from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
 
 
 class SituacoesDePagamento(object):
+
+    # Ver status disponíveis em:
+    # https://pagseguro.uol.com.br/v2/guia-de-integracao/api-de-notificacoes.html
+
     aguardando = "1"
     em_analise = "2"
     paga = "3"
+    disponivel = "4" # Deve ser ignorado acao neste caso
     em_disputa = "5"
     devolvido = "6"
     cancelado = "7"
@@ -89,10 +94,13 @@ class Registro(RegistroBase):
             return SituacaoPedido.SITUACAO_PEDIDO_CANCELADO
         if self.situacao_charged_back:
             return SituacaoPedido.SITUACAO_PAGTO_CHARGEBACK
+
         return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
 
     @property
     def alterar_situacao(self):
+        if self.situacao_disponivel:
+            return False
         return self.obter_dados_do_gateway
 
     @property
