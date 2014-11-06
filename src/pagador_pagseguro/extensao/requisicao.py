@@ -55,8 +55,8 @@ class EnviarPedido(Enviar):
         nome = self.pedido.cliente.nome
         if nome:
             nome = nome.strip()
-        if len(self.pedido.cliente.nome.split(" ")) < 2:
-            nome = u"{} x".format(self.pedido.cliente.nome)
+        if len(nome.split(" ")) < 2:
+            nome = u"{} x".format(nome)
         if "&" in nome or "?" in nome:
             nome = nome.replace("&", "E")
         if "?" in nome:
