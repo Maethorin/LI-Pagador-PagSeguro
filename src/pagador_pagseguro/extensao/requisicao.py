@@ -111,7 +111,7 @@ class EnviarPedido(Enviar):
         return None
 
     def processar_resposta(self, resposta):
-        if resposta.status_code == 401:
+        if resposta.status_code in (401, 403) or 'forbiden' in resposta.content.lower():
             return {"content": {"mensagem": u"Autorização da plataforma falhou em {}".format(self.url)}, "status": resposta.status_code, "reenviar": False}
         retorno = self.formatador.xml_para_dict(resposta.content)
         if resposta.status_code in (201, 200):

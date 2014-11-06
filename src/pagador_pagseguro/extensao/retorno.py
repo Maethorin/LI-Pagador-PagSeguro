@@ -43,6 +43,8 @@ class Registro(RegistroBase):
     def pedido_numero(self):
         if self.retorno_de_requisicao:
             return self.dados["referencia"]
+        if not self.obter_dados_do_gateway:
+            return None
         return self.dados["transaction"]["reference"]
 
     @property
