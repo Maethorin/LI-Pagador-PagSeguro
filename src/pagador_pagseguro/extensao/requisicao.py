@@ -37,36 +37,10 @@ class EnviarPedido(Enviar):
     def sandbox(self):
         return "sandbox." if (settings.ENVIRONMENT == "local" or settings.ENVIRONMENT == "development") else ""
 
-    @property
-    def telefone(self):
-        telefone = None
-        if self.pedido.cliente.telefone_principal:
-            telefone = self.pedido.cliente.telefone_principal
-        elif self.pedido.cliente.telefone_comercial:
-            telefone = self.pedido.cliente.telefone_comercial
-        elif self.pedido.cliente.telefone_celular:
-            telefone = self.pedido.cliente.telefone_celular
-        if telefone:
-            return self.formatador.converte_tel_em_tupla_com_ddd(telefone)
-        return '', ''
-
-    @property
-    def nome_do_cliente(self):
-        nome = self.pedido.cliente.nome
-        if nome:
-            nome = nome.strip()
-        if len(nome.split(" ")) < 2:
-            nome = u"{} x".format(nome)
-        if "&" in nome or "?" in nome:
-            nome = nome.replace("&", "E")
-        if "?" in nome:
-            nome = nome.replace("?", " ")
-        return self.formatador.trata_unicode_com_limite(nome, limite=50, ascii=True, trata_espaco_duplo=True)
-
     def gerar_dados_de_envio(self, passo=None):
         notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
         parametros = ParametrosPagSeguro(conta_id=self.pedido.conta_id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
-        numero_telefone = self.telefone
+        numero_telefone = self.telefone_do_cliente
         envio = self.pedido.pedido_envio.envio
         checkout = Checkout(
             app_key=parametros.app_secret,
