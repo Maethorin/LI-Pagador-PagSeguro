@@ -87,6 +87,8 @@ class EnviarPedido(Enviar):
     def processar_resposta(self, resposta):
         if resposta.status_code in (401, 403) or 'forbiden' in resposta.content.lower():
             return {"content": {"mensagem": u"Autorização da plataforma falhou em {}".format(self.url)}, "status": resposta.status_code, "reenviar": False}
+        if resposta.status_code == 500 or 'internal server error' in resposta.content.lower():
+            return {"content": {"mensagem": u"O sistema do PagSeguro está indisponível no momento"}, "status": resposta.status_code, "reenviar": False}
         retorno = self.formatador.xml_para_dict(resposta.content)
         if resposta.status_code in (201, 200):
             url = "https://{}pagseguro.uol.com.br/v2/checkout/payment.html?code={}".format(self.sandbox, retorno["checkout"]["code"])
