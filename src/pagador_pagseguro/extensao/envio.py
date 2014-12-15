@@ -12,6 +12,7 @@ class Checkout(EntidadeSerializavel):
 
     @classmethod
     def cria_item(cls, item):
+        item += 1
         cls.atributos.append(Atributo("itemId{}".format(item)))
         cls.atributos.append(Atributo("itemDescription{}".format(item)))
         cls.atributos.append(Atributo("itemAmount{}".format(item)))
