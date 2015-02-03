@@ -1,5 +1,5 @@
 {% load filters %}
-{% if modo == 'padrao-novo' %}
+{% if modo == 'estrutura/v0' %}
     <li class="pagamento lista-item" id="pagamento_1" data-id="1" data-nome="PagSeguro">
         <div class="radio_button">
             <input class="forma_pagamento" type="radio" value="1" name="forma_pagamento" {% if forma_pagamento == pagamento.id|stringformat:"s" %}checked="checked"{% endif %} />
@@ -15,7 +15,7 @@
                 <input type="radio" name="forma_pagamento" id="{% if modo == 'modal' %}modal-{% endif %}radio-pagseguro" {% if forma_pagamento == pagamento.id|stringformat:"s" %}checked="checked"{% endif %} value="1">
             </span>
             <span class="forma-conteiner text-right">
-                <img src="{{ STATIC_URL }}novo-template/img/bandeiras/pagseguro.png" title="Pague com PagSeguro" alt="Pague com PagSeguro" />
+                <img src="{{ STATIC_URL }}loja/estrutura/v1/img/bandeiras/pagseguro.png" title="Pague com PagSeguro" alt="Pague com PagSeguro" />
             </span>
         </label>
         <div id="{% if modo == 'modal' %}modal-{% endif %}escolha-pagseguro" class="collapse">
