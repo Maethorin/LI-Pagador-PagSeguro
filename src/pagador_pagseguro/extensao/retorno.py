@@ -87,7 +87,7 @@ class Registro(RegistroBase):
             return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
         if self.situacao_em_analise:
             return SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE
-        if self.situacao_paga:
+        if self.situacao_paga or self.situacao_disponivel:
             return SituacaoPedido.SITUACAO_PEDIDO_PAGO
         if self.situacao_em_disputa:
             return SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA
