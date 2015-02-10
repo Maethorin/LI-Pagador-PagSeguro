@@ -7,14 +7,15 @@ from pagador_pagseguro.extensao.seguranca import ParametrosPagSeguro
 
 
 class SituacoesDePagamento(object):
-
-    # Ver status disponíveis em:
-    # https://pagseguro.uol.com.br/v2/guia-de-integracao/api-de-notificacoes.html
-
+    """
+    Traduz os códigos de status do PagSeguro em algo que o pagador entenda
+    Ver status disponíveis em:
+    https://pagseguro.uol.com.br/v2/guia-de-integracao/api-de-notificacoes.html
+    """
     aguardando = "1"
     em_analise = "2"
     paga = "3"
-    disponivel = "4" # Deve ser ignorado acao neste caso
+    disponivel = "4"
     em_disputa = "5"
     devolvido = "6"
     cancelado = "7"
@@ -57,7 +58,7 @@ class Registro(RegistroBase):
 
     @property
     def valores_de_pagamento(self):
-        if not "transaction" in self.dados:
+        if "transaction" not in self.dados:
             return {}
         valores = {
             "identificador_id": self.identificador_id,
@@ -101,8 +102,6 @@ class Registro(RegistroBase):
 
     @property
     def alterar_situacao(self):
-        if self.situacao_disponivel:
-            return False
         return self.obter_dados_do_gateway
 
     @property
