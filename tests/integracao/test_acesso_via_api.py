@@ -11,10 +11,10 @@ extensibilidade.SETTINGS.EXTENSOES = {
 
 
 class ConfiguracaoMeioDePagamentoDaLoja(TestBase):
-    url = '/loja/8/meio-pagamento/pagseguro/'
+    url = '/loja/8/meio-pagamento/pagseguro/configurar'
 
     @mock.patch('pagador_pagseguro.reloaded.entidades.ConfiguracaoMeioPagamento')
-    def test_deve_obter_dados_do_mercadopago(self, configuracao_mock):
+    def test_deve_obter_dados_do_pagseguro(self, configuracao_mock):
         configuracao = mock.MagicMock()
         configuracao_mock.return_value = configuracao
         configuracao.to_dict.return_value = 'PAGSEGURO'
@@ -24,7 +24,7 @@ class ConfiguracaoMeioDePagamentoDaLoja(TestBase):
         configuracao_mock.assert_called_with(loja_id=8)
 
     @mock.patch('pagador_pagseguro.reloaded.entidades.ConfiguracaoMeioPagamento')
-    def test_deve_grava_dados_do_mercadopago(self, configuracao_mock):
+    def test_deve_grava_dados_do_pagseguro(self, configuracao_mock):
         configuracao = mock.MagicMock()
         configuracao_mock.return_value = configuracao
         configuracao.to_dict.return_value = 'PAGSEGURO'
