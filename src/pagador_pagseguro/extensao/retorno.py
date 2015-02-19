@@ -89,8 +89,6 @@ class Registro(RegistroBase):
             return SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE
         if self.situacao_paga:
             return SituacaoPedido.SITUACAO_PEDIDO_PAGO
-        if self.situacao_disponivel:
-            return SituacaoPedido.SITUACAO_PAGTO_DISPONIVEL
         if self.situacao_em_disputa:
             return SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA
         if self.situacao_devolvido:
@@ -104,6 +102,8 @@ class Registro(RegistroBase):
 
     @property
     def alterar_situacao(self):
+        if self.situacao_disponivel:
+            return False
         return self.obter_dados_do_gateway
 
     @property
