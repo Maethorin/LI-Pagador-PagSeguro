@@ -32,3 +32,17 @@ class ConfiguracaoMeioDePagamentoDaLoja(TestBase):
         json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'configuracao_pagamento': u'PAGSEGURO'}})
         response.status_code.should.be.equal(200)
         configuracao.salvar.assert_called_with({'token': u'ZES'})
+
+
+class InstalacaoMeioDePagamentoDaLoja(TestBase):
+    url = '/loja/8/meio-pagamento/pagseguro/instalar'
+
+    @mock.patch('pagador_pagseguro.reloaded.entidades.ConfiguracaoMeioPagamento')
+    def test_deve_obter_url_autoirzacao_do_pagseguro(self, configuracao_mock):
+        configuracao = mock.MagicMock()
+        configuracao_mock.return_value = configuracao
+        configuracao.instalar.return_value = 'url-ativador'
+        response = self.app.put(self.url, follow_redirects=True, data={'token': 'ZES'}, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
+        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'conteudo': u'url-ativador'}})
+        response.status_code.should.be.equal(200)
+        configuracao.instalar.assert_called_with({'token': u'ZES'})
