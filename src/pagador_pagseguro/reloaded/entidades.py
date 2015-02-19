@@ -8,7 +8,7 @@ from pagador_pagseguro.reloaded import cadastro
 
 
 class ConfiguracaoMeioPagamento(entidades.ConfiguracaoMeioPagamento):
-    _campos = ['ativo', 'valor_minimo_aceitado', 'valor_minimo_parcela', 'mostrar_parcelamento', 'maximo_parcelas', 'parcelas_sem_juros']
+    _campos = ['ativo', 'aplicacao', 'codigo_autorizacao', 'valor_minimo_aceitado', 'valor_minimo_parcela', 'mostrar_parcelamento', 'maximo_parcelas', 'parcelas_sem_juros']
     _codigo_gateway = 1
 
     def __init__(self, loja_id, codigo_pagamento=None):
@@ -34,7 +34,7 @@ class InstaladorMeioDePagamento(entidades.InstaladorMeioDePagamento):
 
     def montar_url_autorizacao(self):
         try:
-            parametros_redirect = {'next_url': self.dados['next_url']}
+            parametros_redirect = {'next_url': self.dados['next_url'], 'fase_atual': '2'}
         except KeyError:
             raise self.InstalacaoNaoFinalizada(u'Você precisa informar a url de redirecionamento na volta do PagSeguro na chave next_url do parâmetro dados.')
         dados = {
