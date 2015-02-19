@@ -87,8 +87,10 @@ class Registro(RegistroBase):
             return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
         if self.situacao_em_analise:
             return SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE
-        if self.situacao_paga: # or self.situacao_disponivel:
+        if self.situacao_paga:
             return SituacaoPedido.SITUACAO_PEDIDO_PAGO
+        if self.situacao_disponivel:
+            return SituacaoPedido.SITUACAO_PAGTO_DISPONIVEL
         if self.situacao_em_disputa:
             return SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA
         if self.situacao_devolvido:
@@ -102,12 +104,6 @@ class Registro(RegistroBase):
 
     @property
     def alterar_situacao(self):
-        # A situacao 4 vem as vezes logo no inicio da transacao e depois
-        # vem outra como aguardando pagamento. Nao faz sentido pois
-        # disponivel significa paga, esta gerando confusao.
-        # Ver com pagseguro forma de resolver.
-        if self.situacao_disponivel:
-            return False
         return self.obter_dados_do_gateway
 
     @property
