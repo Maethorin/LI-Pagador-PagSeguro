@@ -127,7 +127,7 @@ class InstalacaoMeioPagamento(unittest.TestCase):
         reposta.conteudo = {'authorizationRequest': {'code': 'codigo_retorno'}}
         instalador.conexao.post.return_value = reposta
         instalador.montar_url_autorizacao().should.be.equal('https://sandbox.pagseguro.uol.com.br/v2/authorization/request.jhtml?code=codigo_retorno')
-        instalador.conexao.post.assert_called_with('https://ws.sandbox.pagseguro.uol.com.br/v2/authorizations/request?appKey=1&appId=2', dados=u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><authorizationRequest><redirectURL><![CDATA[http://localhost:5000/pagador/forma-pagamento/1/instalacao/8/?next_url=url-next&fase_atual=2]]></redirectURL><reference>8</reference><permissions><code>CREATE_CHECKOUTS</code><code>SEARCH_TRANSACTIONS</code><code>RECEIVE_TRANSACTION_NOTIFICATIONS</code></permissions></authorizationRequest>')
+        instalador.conexao.post.assert_called_with('https://ws.sandbox.pagseguro.uol.com.br/v2/authorizations/request?appKey=1&appId=2', dados=u'<?xml version="1.0" encoding="UTF-8" standalone="yes"?><authorizationRequest><redirectURL><![CDATA[http://localhost:5000/pagador/loja/8/meio-pagamento/pagseguro/instalar?next_url=url-next&fase_atual=2]]></redirectURL><reference>8</reference><permissions><code>CREATE_CHECKOUTS</code><code>SEARCH_TRANSACTIONS</code><code>RECEIVE_TRANSACTION_NOTIFICATIONS</code></permissions></authorizationRequest>')
 
     @mock.patch('pagador_pagseguro.reloaded.entidades.entidades.ParametrosDeContrato')
     def test_deve_disparar_erro_se_nao_tiver_next_url(self, parametros_mock):
