@@ -19,6 +19,8 @@ class ConfiguracaoMeioPagamento(entidades.ConfiguracaoMeioPagamento):
 
 
 class InstaladorMeioDePagamento(entidades.InstaladorMeioDePagamento):
+    campos = ['codigo_autorizacao', 'aplicacao']
+
     def __init__(self, loja_id, dados):
         super(InstaladorMeioDePagamento, self).__init__(loja_id, dados)
         self.usa_alt = 'ua' in self.dados
@@ -76,3 +78,6 @@ class InstaladorMeioDePagamento(entidades.InstaladorMeioDePagamento):
                 'aplicacao': self.aplicacao
             }
         raise self.InstalacaoNaoFinalizada(u'Erro ao entrar em contato com o PagSeguro. Código: {} - Resposta: {}'.format(resposta.status_code, resposta.conteudo))
+
+    def desinstalar(self, dados):
+        return {"redirect": "https://{}pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml".format(self.sandbox)}

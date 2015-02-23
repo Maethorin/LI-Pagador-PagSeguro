@@ -33,7 +33,7 @@ class PagSeguroConfiguracaoMeioPagamento(unittest.TestCase):
         configuracao.eh_aplicacao.should.be.truthy
 
 
-class InstalacaoMeioPagamento(unittest.TestCase):
+class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
     @mock.patch('pagador_pagseguro.reloaded.entidades.entidades.ParametrosDeContrato')
     def test_deve_instanciar_com_loja_id(self, parametros_mock):
         instalador = entidades.InstaladorMeioDePagamento(8, {'dados': 1})
@@ -205,3 +205,19 @@ class InstalacaoMeioPagamento(unittest.TestCase):
         reposta.status_code = 'pagseguro status_code'
         instalador.conexao.get.return_value = reposta
         instalador.obter_dados.when.called_with().should.throw(instalador.InstalacaoNaoFinalizada, u'Erro ao entrar em contato com o PagSeguro. Código: pagseguro status_code - Resposta: pagseguro conteudo')
+
+
+class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
+    def test_deve_definir_lista_de_campos(self):
+        instalador = entidades.InstaladorMeioDePagamento(8, {})
+        instalador.campos.should.be.equal(['codigo_autorizacao', 'aplicacao'])
+
+    def test_deve_retornar_redirect_pra_pagina_de_autorizacoes(self):
+        instalador = entidades.InstaladorMeioDePagamento(8, {})
+        instalador.desinstalar({}).should.be.equal({'redirect': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
+
+    @mock.patch('pagador_pagseguro.reloaded.entidades.settings', autospec=True)
+    def test_nao_deve_usar_sandbox_na_url_se_for_production(self, settings_mock):
+        settings_mock.ENVIRONMENT = 'production'
+        instalador = entidades.InstaladorMeioDePagamento(8, {})
+        instalador.desinstalar({}).should.be.equal({'redirect': 'https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
