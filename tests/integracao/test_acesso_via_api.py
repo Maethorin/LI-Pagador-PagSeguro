@@ -55,7 +55,7 @@ class InstalacaoMeioDePagamentoDaLoja(TestBase):
         configuracao.instalar.return_value = {'mensagem': 'PAGSEGURO', 'redirect': 'url-redirect'}
         redirect_mock.return_value = 'ZAS'
         self.app.get(self.url, follow_redirects=True, data={'token': 'ZES'}, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
-        redirect_mock.assert_called_with('url-redirect', code=301)
+        redirect_mock.assert_called_with('url-redirect?mensagem=PAGSEGURO', code=301)
 
     @mock.patch('pagador_pagseguro.reloaded.entidades.ConfiguracaoMeioPagamento')
     def test_deve_obter_url_autorizacao_do_pagseguro(self, configuracao_mock):
