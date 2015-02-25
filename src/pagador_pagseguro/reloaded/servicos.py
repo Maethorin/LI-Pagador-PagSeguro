@@ -5,11 +5,11 @@ from pagador import settings
 from pagador.reloaded import servicos
 
 
-class InstaladorMeioDePagamento(servicos.InstaladorMeioDePagamento):
+class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
     campos = ['codigo_autorizacao', 'aplicacao']
 
     def __init__(self, loja_id, dados):
-        super(InstaladorMeioDePagamento, self).__init__(loja_id, dados)
+        super(InstalaMeioDePagamento, self).__init__(loja_id, dados)
         self.usa_alt = 'ua' in self.dados
         self.aplicacao = 'pagseguro-alternativo' if self.usa_alt else 'pagseguro'
         parametros = self.cria_entidade_de_pagador('ParametrosDeContrato', loja_id=loja_id).obter_para(self.aplicacao)

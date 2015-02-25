@@ -7,22 +7,22 @@ from pagador_pagseguro.reloaded import servicos
 class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
     def test_deve_instanciar_com_loja_id(self, parametros_mock):
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.loja_id.should.be.equal(8)
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
     def test_deve_definir_usa_alt(self, parametros_mock):
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'ua': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'ua': 1})
         instalador.usa_alt.should.be.truthy
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
     def test_deve_definir_aplicacao(self, parametros_mock):
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.aplicacao.should.be.equal('pagseguro')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
     def test_deve_definir_aplicacao_com_usa_alt(self, parametros_mock):
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'ua': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'ua': 1})
         instalador.aplicacao.should.be.equal('pagseguro-alternativo')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
@@ -30,7 +30,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        servicos.InstalaMeioDePagamento(8, {'dados': 1})
         parametros_mock.assert_called_with(loja_id=8)
         parametro.obter_para.assert_called_with('pagseguro')
 
@@ -39,7 +39,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'ua': 1})
+        servicos.InstalaMeioDePagamento(8, {'dados': 1, 'ua': 1})
         parametro.obter_para.assert_called_with('pagseguro-alternativo')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
@@ -47,43 +47,43 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.app_key.should.be.equal('1')
         instalador.app_id.should.be.equal('2')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstaladorMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
     def test_deve_definir_conexao(self, obter_mock, parametros_mock):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
         obter_mock.return_value = 'conexao'
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.conexao.should.be.equal('conexao')
         obter_mock.assert_called_with(instalador, formato_envio='application/xml', formato_resposta='application/xml')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstaladorMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_nao_deve_ser_sandbox_em_producao(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'production'
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.sandbox.should.be.equal('')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstaladorMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_deve_ser_sandbox_em_desenvolvimento(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'development'
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.sandbox.should.be.equal('sandbox.')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstaladorMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_deve_ser_sandbox_em_local(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'local'
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.sandbox.should.be.equal('sandbox.')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
@@ -91,7 +91,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'next_url': 'url-next'})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'next_url': 'url-next'})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = True
@@ -105,20 +105,20 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = True
         reposta.conteudo = {'authorizationRequest': {'code': 'codigo_retorno'}}
         instalador.conexao.post.return_value = reposta
-        instalador.montar_url_autorizacao.when.called_with().should.throw(servicos.InstaladorMeioDePagamento.InstalacaoNaoFinalizada, u'Você precisa informar a url de redirecionamento na volta do PagSeguro na chave next_url do parâmetro dados.')
+        instalador.montar_url_autorizacao.when.called_with().should.throw(servicos.InstalaMeioDePagamento.InstalacaoNaoFinalizada, u'Você precisa informar a url de redirecionamento na volta do PagSeguro na chave next_url do parâmetro dados.')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
     def test_deve_disparar_erro_se_nao_conseguir_obter_code(self, parametros_mock):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'next_url': 'url-next'})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'next_url': 'url-next'})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = False
@@ -132,7 +132,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = True
@@ -145,7 +145,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = True
@@ -159,7 +159,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.obter_dados.when.called_with().should.throw(instalador.InstalacaoNaoFinalizada, u'O PagSeguro não retornou o código de autorização válido. Por favor, verifique a sua conta no PagSeguro e tente de novo.')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
@@ -167,7 +167,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
-        instalador = servicos.InstaladorMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
+        instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1, 'notificationCode': 'notification-code'})
         instalador.conexao = mock.MagicMock()
         reposta = mock.MagicMock()
         reposta.sucesso = False
@@ -179,16 +179,16 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
 class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
     def test_deve_definir_lista_de_campos(self):
-        instalador = servicos.InstaladorMeioDePagamento(8, {})
+        instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.campos.should.be.equal(['codigo_autorizacao', 'aplicacao'])
 
     def test_deve_retornar_redirect_pra_pagina_de_autorizacoes(self):
-        instalador = servicos.InstaladorMeioDePagamento(8, {})
+        instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.desinstalar({}).should.be.equal({'redirect': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_nao_deve_usar_sandbox_na_url_se_for_production(self, settings_mock):
         settings_mock.ENVIRONMENT = 'production'
-        instalador = servicos.InstaladorMeioDePagamento(8, {})
+        instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.desinstalar({}).should.be.equal({'redirect': 'https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 
