@@ -52,7 +52,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         instalador.app_id.should.be.equal('2')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao')
     def test_deve_definir_conexao(self, obter_mock, parametros_mock):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
@@ -60,10 +60,10 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         obter_mock.return_value = 'conexao'
         instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
         instalador.conexao.should.be.equal('conexao')
-        obter_mock.assert_called_with(instalador, formato_envio='application/xml', formato_resposta='application/xml')
+        obter_mock.assert_called_with(formato_envio='application/xml', formato_resposta='application/xml')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao')
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_nao_deve_ser_sandbox_em_producao(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'production'
@@ -71,7 +71,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         instalador.sandbox.should.be.equal('')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao')
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_deve_ser_sandbox_em_desenvolvimento(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'development'
@@ -79,7 +79,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         instalador.sandbox.should.be.equal('sandbox.')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao', autospec=True)
+    @mock.patch('pagador_pagseguro.reloaded.servicos.InstalaMeioDePagamento.obter_conexao')
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_deve_ser_sandbox_em_local(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'local'
