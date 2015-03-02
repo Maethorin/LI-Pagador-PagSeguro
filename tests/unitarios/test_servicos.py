@@ -178,14 +178,17 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
 
 class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
+    @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
     def test_deve_definir_lista_de_campos(self):
         instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.campos.should.be.equal(['codigo_autorizacao', 'aplicacao'])
 
+    @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
     def test_deve_retornar_redirect_pra_pagina_de_autorizacoes(self):
         instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.desinstalar({}).should.be.equal({'redirect': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 
+    @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_nao_deve_usar_sandbox_na_url_se_for_production(self, settings_mock):
         settings_mock.ENVIRONMENT = 'production'
