@@ -1,7 +1,7 @@
 //{% load filters %}
 var url = '';
 var $counter = null;
-var segundos = 5;
+var segundos = 3;
 $(function() {
     var $pagSeguroMensagem = $(".pagseguro-mensagem");
 
@@ -28,7 +28,7 @@ $(function() {
                     $("#redirecting").show();
                     url = data.content.url;
                     iniciaContador();
-                    setTimeout('window.location = url;', 5000);
+                    setTimeout('window.location = url;', 3000);
                 }
                 else {
                     if (data.status == 400 || data.status == 401) {
