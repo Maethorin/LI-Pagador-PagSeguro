@@ -156,7 +156,7 @@ class RegistraResultado(servicos.RegistraResultado):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def monta_dados_pagamento(self):
-        if self.obteve_dados_pagamento:
+        if self.resposta_pagseguro:
             self.dados_pagamento['identificador_id'] = self.dados['transacao']
             self.pedido_numero = self.dados["referencia"]
             print self.resposta_pagseguro.conteudo
@@ -177,7 +177,6 @@ class RegistraResultado(servicos.RegistraResultado):
                 'appId': parametros['app_id'],
             }
             self.resposta_pagseguro = self.conexao.get(self.url, dados=dados)
-            self.obteve_dados_pagamento = self.resposta_pagseguro.sucesso
 
     @property
     def deve_obter_informacoes_pagseguro(self):

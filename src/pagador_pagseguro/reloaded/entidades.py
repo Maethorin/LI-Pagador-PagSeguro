@@ -13,9 +13,9 @@ class TipoEnvio(object):
 
     @property
     def valor(self):
-        if self.codigo == "pac":
+        if self.codigo == 'pac':
             return 1
-        if "sedex" in self.codigo:
+        if 'sedex' in self.codigo:
             return 2
         return 3
 
@@ -98,10 +98,10 @@ class Malote(entidades.Malote):
         numero_telefone = pedido.cliente_telefone
         self.app_key = parametros_contrato['app_secret']
         self.app_id = parametros_contrato['app_id']
-        self.currency = "BRL"
+        self.currency = 'BRL'
         self.reference = pedido.numero
-        self.notification_url = notification_url
-        self.redirect_url = "{}/resultado?next_url={}&referencia={}".format(notification_url, dados["next_url"], pedido.numero)
+        self.notification_url = '{}/notificacao'.format(notification_url)
+        self.redirect_url = '{}/resultado?next_url={}&referencia={}'.format(notification_url, dados['next_url'], pedido.numero)
         self.sender_name = pedido.cliente_nome_ascii
         self.sender_area_code = numero_telefone[0]
         self.sender_phone = numero_telefone[1]
@@ -116,7 +116,7 @@ class Malote(entidades.Malote):
         self.shipping_address_postal_code = pedido.endereco_entrega['cep']
         self.shipping_address_city = self.formatador.trata_unicode_com_limite(pedido.endereco_entrega['cidade'], 60, ascii=True)
         self.shipping_address_state = pedido.endereco_entrega['estado']
-        self.shipping_address_country = "BRA"
+        self.shipping_address_country = 'BRA'
 
         for indice, item in enumerate(pedido.itens):
             self._cria_item(indice, item)
