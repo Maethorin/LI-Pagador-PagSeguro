@@ -27,8 +27,8 @@ class EnviarPedido(Enviar):
         self.exige_autenticacao = True
         self.processa_resposta = True
         self.url = "https://ws.{}pagseguro.uol.com.br/v2/checkout".format(self.sandbox)
-        self.deve_gravar_dados_de_pagamento = False
-        self.formato_de_envio = FormatoDeEnvio.querystring
+        self.deve_gravar_dados_pagamento = False
+        self.formato_envio = FormatoDeEnvio.querystring
         self.headers = {"Content-Type": "application/x-www-form-urlencoded; charset=ISO-8859-1"}
         for item in range(0, len(self.pedido.itens.all())):
             Checkout.cria_item(item)
@@ -37,10 +37,10 @@ class EnviarPedido(Enviar):
     def sandbox(self):
         return "sandbox." if (settings.ENVIRONMENT == "local" or settings.ENVIRONMENT == "development") else ""
 
-    def gerar_dados_de_envio(self, passo=None):
+    def gerar_dados_envio(self, passo=None):
         notification_url = PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.pedido.conta_id)
         parametros = ParametrosPagSeguro(conta_id=self.pedido.conta_id, usa_alt=(self.configuracao_pagamento.aplicacao == 'pagseguro-alternativo'))
-        numero_telefone = self.telefone_do_cliente
+        numero_telefone = self.telefone_cliente
         envio = self.pedido.pedido_envio.envio
         checkout = Checkout(
             app_key=parametros.app_secret,
@@ -50,7 +50,7 @@ class EnviarPedido(Enviar):
             notification_url=notification_url,
             redirect_url="{}/success?next_url={}&referencia={}".format(notification_url, self.dados["next_url"], self.pedido.numero),
 
-            sender_name=self.nome_do_cliente,
+            sender_name=self.nome_cliente,
             sender_area_code=numero_telefone[0],
             sender_phone=numero_telefone[1],
             sender_email=self.formatador.trata_email_com_mais(self.pedido.cliente.email),
@@ -69,19 +69,19 @@ class EnviarPedido(Enviar):
 
         )
         for indice, item in enumerate(self.pedido.itens.all()):
-            self.define_valor_de_atributo_de_item(checkout, "Id", indice, self.formatador.trata_unicode_com_limite(item.sku, 100, ascii=True))
-            self.define_valor_de_atributo_de_item(checkout, "Description", indice, self.formatador.trata_unicode_com_limite(item.nome, 100, ascii=True))
-            self.define_valor_de_atributo_de_item(checkout, "Amount", indice, self.formatador.formata_decimal(item.preco_venda))
-            self.define_valor_de_atributo_de_item(checkout, "Quantity", indice, self.formatador.formata_decimal(item.quantidade, como_int=True))
+            self.define_valor_atributo_item(checkout, "Id", indice, self.formatador.trata_unicode_com_limite(item.sku, 100, ascii=True))
+            self.define_valor_atributo_item(checkout, "Description", indice, self.formatador.trata_unicode_com_limite(item.nome, 100, ascii=True))
+            self.define_valor_atributo_item(checkout, "Amount", indice, self.formatador.formata_decimal(item.preco_venda))
+            self.define_valor_atributo_item(checkout, "Quantity", indice, self.formatador.formata_decimal(item.quantidade, como_int=True))
         return checkout.to_dict()
 
-    def define_valor_de_atributo_de_item(self, checkout, atributo, indice, valor):
+    def define_valor_atributo_item(self, checkout, atributo, indice, valor):
         indice += 1
         nome = "item{}{}".format(atributo, indice)
         atributo = "item_{}{}".format(atributo, indice)
-        checkout.define_valor_de_atributo(nome, {atributo.lower(): valor})
+        checkout.define_valor_atributo(nome, {atributo.lower(): valor})
 
-    def obter_situacao_do_pedido(self, status_requisicao):
+    def obter_situacao_pedido(self, status_requisicao):
         return None
 
     def processar_resposta(self, resposta):

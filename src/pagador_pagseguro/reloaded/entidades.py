@@ -78,19 +78,19 @@ class Malote(entidades.Malote):
         self.redirect_url = None
         self.notification_url = None
 
-    def _cria_item(self, indice, item_do_pedido):
+    def _cria_item(self, indice, item_pedido):
         indice += 1
         item_id = 'item_id{}'.format(indice)
-        setattr(self, item_id.format(indice), self.formatador.trata_unicode_com_limite(item_do_pedido.sku, 100, ascii=True))
+        setattr(self, item_id.format(indice), self.formatador.trata_unicode_com_limite(item_pedido.sku, 100, ascii=True))
         self._chaves_alternativas_para_serializacao[item_id] = 'itemId{}'.format(indice)
         item_description = 'item_description{}'.format(indice)
-        setattr(self, item_description, self.formatador.trata_unicode_com_limite(item_do_pedido.nome, 100, ascii=True))
+        setattr(self, item_description, self.formatador.trata_unicode_com_limite(item_pedido.nome, 100, ascii=True))
         self._chaves_alternativas_para_serializacao[item_description] = 'itemDescription{}'.format(indice)
         item_amount = 'item_amount{}'.format(indice)
-        setattr(self, item_amount, self.formatador.formata_decimal(item_do_pedido.preco_venda))
+        setattr(self, item_amount, self.formatador.formata_decimal(item_pedido.preco_venda))
         self._chaves_alternativas_para_serializacao[item_amount] = 'itemAmount{}'.format(indice)
         item_quantity = 'item_quantity{}'.format(indice)
-        setattr(self, item_quantity, self.formatador.formata_decimal(item_do_pedido.quantidade, como_int=True))
+        setattr(self, item_quantity, self.formatador.formata_decimal(item_pedido.quantidade, como_int=True))
         self._chaves_alternativas_para_serializacao[item_quantity] = 'itemQuantity{}'.format(indice)
 
     def monta_conteudo(self, pedido, parametros_contrato=None, dados=None):
@@ -128,6 +128,6 @@ class ConfiguracaoMeioPagamento(entidades.ConfiguracaoMeioPagamento):
 
     def __init__(self, loja_id, codigo_pagamento=None):
         super(ConfiguracaoMeioPagamento, self).__init__(loja_id, codigo_pagamento)
-        self.preencher_do_gateway(self._codigo_gateway, self._campos)
+        self.preencher_gateway(self._codigo_gateway, self._campos)
         self.formulario = cadastro.FormularioPagSeguro()
         self.eh_aplicacao = True

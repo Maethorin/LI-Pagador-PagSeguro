@@ -7,7 +7,7 @@ from pagador.configuracao.cliente import Script, TipoScript
 eh_aplicacao = True
 
 
-def caminho_do_arquivo_de_template(arquivo):
+def caminho_arquivo_template(arquivo):
     return caminho_para_template(arquivo, meio_pagamento='pagseguro')
 
 
@@ -51,15 +51,15 @@ class Formulario(FormularioBase):
 class MeioPagamentoEnvio(object):
     @property
     def css(self):
-        return Script(tipo=TipoScript.css, caminho_arquivo=caminho_do_arquivo_de_template("style.css"))
+        return Script(tipo=TipoScript.css, caminho_arquivo=caminho_arquivo_template("style.css"))
 
     @property
     def function_enviar(self):
-        return Script(tipo=TipoScript.javascript, eh_template=True, caminho_arquivo=caminho_do_arquivo_de_template("javascript.js"))
+        return Script(tipo=TipoScript.javascript, eh_template=True, caminho_arquivo=caminho_arquivo_template("javascript.js"))
 
     @property
     def mensagens(self):
-        return Script(tipo=TipoScript.html, caminho_arquivo=caminho_do_arquivo_de_template("mensagens.html"), eh_template=True)
+        return Script(tipo=TipoScript.html, caminho_arquivo=caminho_arquivo_template("mensagens.html"), eh_template=True)
 
     def to_dict(self):
         return [
@@ -70,7 +70,7 @@ class MeioPagamentoEnvio(object):
 
 
 class MeioPagamentoSelecao(SelecaoBase):
-    selecao = Script(tipo=TipoScript.html, nome="selecao", caminho_arquivo=caminho_do_arquivo_de_template("selecao.html"), eh_template=True)
+    selecao = Script(tipo=TipoScript.html, nome="selecao", caminho_arquivo=caminho_arquivo_template("selecao.html"), eh_template=True)
 
     def to_dict(self):
         if not self.aceita_pagamento_no_valor():

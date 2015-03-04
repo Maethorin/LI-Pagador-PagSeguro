@@ -128,7 +128,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
         instalador.montar_url_autorizacao.when.called_with().should.throw(instalador.InstalacaoNaoFinalizada, u'Erro ao entrar em contato com o PagSeguro. Código: pagseguro status_code - Resposta: pagseguro conteudo')
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato')
-    def test_deve_obter_dados_do_pagseguro(self, parametros_mock):
+    def test_deve_obter_dados_pagseguro(self, parametros_mock):
         parametro = mock.MagicMock()
         parametro.obter_para.return_value = {'app_secret': '1', 'app_id': '2'}
         parametros_mock.return_value = parametro
@@ -179,12 +179,12 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
 class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
-    def test_deve_definir_lista_de_campos(self):
+    def test_deve_definir_lista_campos(self):
         instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.campos.should.be.equal(['codigo_autorizacao', 'aplicacao'])
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
-    def test_deve_retornar_redirect_pra_pagina_de_autorizacoes(self):
+    def test_deve_retornar_redirect_pra_pagina_autorizacoes(self):
         instalador = servicos.InstalaMeioDePagamento(8, {})
         instalador.desinstalar({}).should.be.equal({'redirect': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 

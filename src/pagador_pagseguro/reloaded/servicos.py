@@ -12,7 +12,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
         super(InstalaMeioDePagamento, self).__init__(loja_id, dados)
         self.usa_alt = 'ua' in self.dados
         self.aplicacao = 'pagseguro-alternativo' if self.usa_alt else 'pagseguro'
-        parametros = self.cria_entidade_de_pagador('ParametrosDeContrato', loja_id=loja_id).obter_para(self.aplicacao)
+        parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=loja_id).obter_para(self.aplicacao)
         self.app_key = parametros['app_secret']
         self.app_id = parametros['app_id']
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.xml, formato_resposta=requisicao.Formato.xml)
@@ -96,7 +96,7 @@ class EntregaPagamento(servicos.EntregaPagamento):
     def envia_pagamento(self, tentativa=1):
         self.resposta_pagseguro = self.conexao.post(self.url, self.malote.to_dict())
 
-    def processa_dados_de_pagamento(self):
+    def processa_dados_pagamento(self):
         self.resultado = self._processa_resposta()
 
     def _processa_resposta(self):
@@ -155,32 +155,32 @@ class RegistraResultado(servicos.RegistraResultado):
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
-    def monta_dados_de_pagamento(self):
-        if self.obteve_dados_de_pagamento:
-            self.dados_de_pagamento['identificador_id'] = self.dados['transacao']
+    def monta_dados_pagamento(self):
+        if self.obteve_dados_pagamento:
+            self.dados_pagamento['identificador_id'] = self.dados['transacao']
             self.pedido_numero = self.dados["referencia"]
             print self.resposta_pagseguro.conteudo
             transacao = self.resposta_pagseguro.conteudo['transaction']
             if 'code' in transacao:
-                self.dados_de_pagamento['transacao_id'] = transacao['code']
+                self.dados_pagamento['transacao_id'] = transacao['code']
             if 'grossAmount' in transacao:
-                self.dados_de_pagamento['valor_pago'] = transacao['grossAmount']
+                self.dados_pagamento['valor_pago'] = transacao['grossAmount']
             self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
         self.resultado = {'resultado': 'OK'}
 
-    def obtem_informacoes_de_pagamento(self):
-        if self.deve_obter_informacoes_do_pagseguro:
+    def obtem_informacoes_pagamento(self):
+        if self.deve_obter_informacoes_pagseguro:
             aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
-            parametros = self.cria_entidade_de_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+            parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
             dados = {
                 'appKey': parametros['app_secret'],
                 'appId': parametros['app_id'],
             }
             self.resposta_pagseguro = self.conexao.get(self.url, dados=dados)
-            self.obteve_dados_de_pagamento = self.resposta_pagseguro.sucesso
+            self.obteve_dados_pagamento = self.resposta_pagseguro.sucesso
 
     @property
-    def deve_obter_informacoes_do_pagseguro(self):
+    def deve_obter_informacoes_pagseguro(self):
         return 'transacao' in self.dados
 
     @property

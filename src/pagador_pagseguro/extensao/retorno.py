@@ -32,7 +32,7 @@ class Registro(RegistroBase):
         self.exige_autenticacao = True
         self.processa_resposta = True
         self.tipo = tipo
-        self.formato_de_envio = FormatoDeEnvio.querystring
+        self.formato_envio = FormatoDeEnvio.querystring
         self.metodo_request = TipoMetodo.get
 
     @property
@@ -42,22 +42,22 @@ class Registro(RegistroBase):
 
     @property
     def pedido_numero(self):
-        if self.retorno_de_requisicao:
+        if self.retorno_requisicao:
             return self.dados["referencia"]
-        if not self.obter_dados_do_gateway:
+        if not self.obter_dados_gateway:
             return None
         return self.dados["transaction"]["reference"]
 
     @property
     def identificador_id(self):
-        if self.retorno_de_requisicao:
+        if self.retorno_requisicao:
             return self.dados["transacao"]
         if "notificationCode" in self.dados:
             return self.dados["notificationCode"]
         return None
 
     @property
-    def valores_de_pagamento(self):
+    def valores_pagamento(self):
         if "transaction" not in self.dados:
             return {}
         valores = {
@@ -70,19 +70,19 @@ class Registro(RegistroBase):
         return valores
 
     @property
-    def deve_gravar_dados_de_pagamento(self):
-        return self.obter_dados_do_gateway
+    def deve_gravar_dados_pagamento(self):
+        return self.obter_dados_gateway
 
     def __getattr__(self, name):
         if name.startswith("situacao_"):
             tipo = name.replace("situacao_", "")
-            if not self.obter_dados_do_gateway:
+            if not self.obter_dados_gateway:
                 return tipo == "aguardando"
             return self.dados["transaction"]["status"] == SituacoesDePagamento.do_tipo(tipo)
         return object.__getattribute__(self, name)
 
     @property
-    def situacao_do_pedido(self):
+    def situacao_pedido(self):
         if self.situacao_aguardando:
             return SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO
         if self.situacao_em_analise:
@@ -104,18 +104,18 @@ class Registro(RegistroBase):
     def alterar_situacao(self):
         if self.situacao_disponivel:
             return False
-        return self.obter_dados_do_gateway
+        return self.obter_dados_gateway
 
     @property
-    def retorno_de_requisicao(self):
+    def retorno_requisicao(self):
         return self.tipo == "success"
 
     @property
-    def retorno_de_notificacao(self):
+    def retorno_notificacao(self):
         return self.tipo == "retorno"
 
     @property
-    def obter_dados_do_gateway(self):
+    def obter_dados_gateway(self):
         if self.dados.get("notificationType", "") == "applicationAuthorization":
             return False
         return "transacao" in self.dados or "notificationCode" in self.dados
@@ -139,7 +139,7 @@ class Registro(RegistroBase):
     def sandbox(self):
         return "sandbox." if (settings.ENVIRONMENT == "local" or settings.ENVIRONMENT == "development") else ""
 
-    def gerar_dados_de_envio(self):
+    def gerar_dados_envio(self):
         usa_alt = self.configuracao.aplicacao == 'pagseguro-alternativo'
         parametros = ParametrosPagSeguro(self.dados["conta_id"], usa_alt)
         return {

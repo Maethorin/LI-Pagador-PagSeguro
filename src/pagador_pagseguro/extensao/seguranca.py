@@ -111,7 +111,7 @@ class Instalador(InstaladorBase):
             return self.formatador.xml_para_dict(resposta.content)
         return {"xerro": resposta.content}
 
-    def dados_de_instalacao(self, dados):
+    def dados_instalacao(self, dados):
         dados_instalacao = self.obter_dados(dados)
         if "erro" in dados_instalacao:
             raise InstalacaoNaoFinalizada(dados_instalacao["erro"])
