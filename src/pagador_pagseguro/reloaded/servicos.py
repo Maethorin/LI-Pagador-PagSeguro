@@ -159,7 +159,6 @@ class RegistraResultado(servicos.RegistraResultado):
         if self.resposta_pagseguro:
             self.dados_pagamento['identificador_id'] = self.dados['transacao']
             self.pedido_numero = self.dados["referencia"]
-            print self.resposta_pagseguro.conteudo
             transacao = self.resposta_pagseguro.conteudo['transaction']
             if 'code' in transacao:
                 self.dados_pagamento['transacao_id'] = transacao['code']
@@ -184,5 +183,45 @@ class RegistraResultado(servicos.RegistraResultado):
 
     @property
     def url(self):
-        end_point = '' if 'transacao' in self.dados else '/notifications'
-        return 'https://ws.{}pagseguro.uol.com.br/v3/transactions{}/{}'.format(self.sandbox, end_point, self.dados['transacao'])
+        return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/{}'.format(self.sandbox, self.dados['transacao'])
+
+
+class RegistraNotificacao(servicos.RegistraResultado):
+    def __init__(self, loja_id, dados=None):
+        super(RegistraNotificacao, self).__init__(loja_id, dados)
+        self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
+        self.resposta_pagseguro = None
+        self.redirect_para = None
+        self.faz_http = True
+
+    def define_credenciais(self):
+        self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
+
+    def monta_dados_pagamento(self):
+        if self.resposta_pagseguro:
+            transacao = self.resposta_pagseguro.conteudo['transaction']
+            self.pedido_numero = transacao["reference"]
+            if 'code' in transacao:
+                self.dados_pagamento['transacao_id'] = transacao['code']
+            if 'grossAmount' in transacao:
+                self.dados_pagamento['valor_pago'] = transacao['grossAmount']
+            self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+        self.resultado = {'resultado': 'OK'}
+
+    def obtem_informacoes_pagamento(self):
+        if self.deve_obter_informacoes_pagseguro:
+            aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+            parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+            dados = {
+                'appKey': parametros['app_secret'],
+                'appId': parametros['app_id'],
+            }
+            self.resposta_pagseguro = self.conexao.get(self.url, dados=dados)
+
+    @property
+    def deve_obter_informacoes_pagseguro(self):
+        return 'notificationCode' in self.dados
+
+    @property
+    def url(self):
+        return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/notifications/{}'.format(self.sandbox, self.dados['notificationCode'])
