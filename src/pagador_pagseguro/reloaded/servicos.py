@@ -121,14 +121,13 @@ class EntregaPagamento(servicos.EntregaPagamento):
             raise self.EnvioNaoRealizado(u'Ocorreram erros no envio dos dados para o PagSeguro', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=mensagens)
 
 
-class SituacoesDePagamento(object):
+class SituacoesDePagamento(servicos.SituacoesDePagamento):
     """
     Traduz os códigos de status do PagSeguro em algo que o pagador entenda
     Ver status disponíveis em:
     https://pagseguro.uol.com.br/v2/guia-de-integracao/api-de-notificacoes.html
     """
     disponivel = '4'
-
     DE_PARA = {
         '1': servicos.SituacaoPedido.SITUACAO_AGUARDANDO_PAGTO,
         '2': servicos.SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE,
@@ -138,10 +137,6 @@ class SituacoesDePagamento(object):
         '7': servicos.SituacaoPedido.SITUACAO_PEDIDO_CANCELADO,
         '8': servicos.SituacaoPedido.SITUACAO_PAGTO_CHARGEBACK
     }
-
-    @classmethod
-    def do_tipo(cls, tipo):
-        return cls.DE_PARA.get(tipo, None)
 
 
 class RegistraResultado(servicos.RegistraResultado):
