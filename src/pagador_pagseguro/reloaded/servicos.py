@@ -87,31 +87,32 @@ class EntregaPagamento(servicos.EntregaPagamento):
         self.tem_malote = True
         self.faz_http = True
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.form_urlencode, formato_resposta=requisicao.Formato.xml)
-        self.resposta_pagseguro = None
+        self.resposta = None
         self.url = 'https://ws.{}pagseguro.uol.com.br/v2/checkout'.format(self.sandbox)
 
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def envia_pagamento(self, tentativa=1):
-        self.resposta_pagseguro = self.conexao.post(self.url, self.malote.to_dict())
+        self.dados_enviados = self.malote.to_dict()
+        self.resposta = self.conexao.post(self.url, self.dados_enviados)
 
     def processa_dados_pagamento(self):
         self.resultado = self._processa_resposta()
 
     def _processa_resposta(self):
-        status_code = self.resposta_pagseguro.status_code
-        if self.resposta_pagseguro.erro_servidor:
+        status_code = self.resposta.status_code
+        if self.resposta.erro_servidor:
             return {'mensagem': u'O servidor do PagSeguro está indisponível nesse momento.', 'status_code': status_code}
-        if self.resposta_pagseguro.timeout:
+        if self.resposta.timeout:
             return {'mensagem': u'O servidor do PagSeguro não respondeu em tempo útil.', 'status_code': status_code}
-        if self.resposta_pagseguro.nao_autenticado or self.resposta_pagseguro.nao_autorizado:
+        if self.resposta.nao_autenticado or self.resposta.nao_autorizado:
             return {'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': status_code}
-        if self.resposta_pagseguro.sucesso:
-            url = 'https://{}pagseguro.uol.com.br/v2/checkout/payment.html?code={}'.format(self.sandbox, self.resposta_pagseguro.conteudo['checkout']['code'])
+        if self.resposta.sucesso:
+            url = 'https://{}pagseguro.uol.com.br/v2/checkout/payment.html?code={}'.format(self.sandbox, self.resposta.conteudo['checkout']['code'])
             return {'url': url}
-        if 'errors' in self.resposta_pagseguro.conteudo:
-            erros = self.resposta_pagseguro.conteudo['errors']
+        if 'errors' in self.resposta.conteudo:
+            erros = self.resposta.conteudo['errors']
             mensagens = []
             if type(erros) is list:
                 for erro in erros:
@@ -143,7 +144,6 @@ class RegistraResultado(servicos.RegistraResultado):
     def __init__(self, loja_id, dados=None):
         super(RegistraResultado, self).__init__(loja_id, dados)
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
-        self.resposta_pagseguro = None
         self.redirect_para = dados.get('next_url', None)
         self.faz_http = True
 
@@ -151,10 +151,10 @@ class RegistraResultado(servicos.RegistraResultado):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def monta_dados_pagamento(self):
-        if self.resposta_pagseguro:
+        if self.resposta:
             self.dados_pagamento['identificador_id'] = self.dados['transacao']
             self.pedido_numero = self.dados["referencia"]
-            transacao = self.resposta_pagseguro.conteudo['transaction']
+            transacao = self.resposta.conteudo['transaction']
             if 'code' in transacao:
                 self.dados_pagamento['transacao_id'] = transacao['code']
             if 'grossAmount' in transacao:
@@ -166,11 +166,11 @@ class RegistraResultado(servicos.RegistraResultado):
         if self.deve_obter_informacoes_pagseguro:
             aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
             parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
-            dados = {
+            self.dados_enviados = {
                 'appKey': parametros['app_secret'],
                 'appId': parametros['app_id'],
             }
-            self.resposta_pagseguro = self.conexao.get(self.url, dados=dados)
+            self.resposta = self.conexao.get(self.url, dados=self.dados_enviados)
 
     @property
     def deve_obter_informacoes_pagseguro(self):
@@ -185,7 +185,6 @@ class RegistraNotificacao(servicos.RegistraResultado):
     def __init__(self, loja_id, dados=None):
         super(RegistraNotificacao, self).__init__(loja_id, dados)
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
-        self.resposta_pagseguro = None
         self.redirect_para = None
         self.faz_http = True
 
@@ -193,8 +192,8 @@ class RegistraNotificacao(servicos.RegistraResultado):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def monta_dados_pagamento(self):
-        if self.resposta_pagseguro:
-            transacao = self.resposta_pagseguro.conteudo['transaction']
+        if self.resposta:
+            transacao = self.resposta.conteudo['transaction']
             self.pedido_numero = transacao["reference"]
             if 'code' in transacao:
                 self.dados_pagamento['transacao_id'] = transacao['code']
@@ -211,7 +210,7 @@ class RegistraNotificacao(servicos.RegistraResultado):
                 'appKey': parametros['app_secret'],
                 'appId': parametros['app_id'],
             }
-            self.resposta_pagseguro = self.conexao.get(self.url, dados=dados)
+            self.resposta = self.conexao.get(self.url, dados=dados)
 
     @property
     def deve_obter_informacoes_pagseguro(self):
