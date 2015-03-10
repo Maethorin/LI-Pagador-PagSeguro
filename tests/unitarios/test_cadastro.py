@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
-from pagador_pagseguro.reloaded import cadastro
+
+from pagador_pagseguro import cadastro
 
 
 class FormularioPagSeguro(unittest.TestCase):
