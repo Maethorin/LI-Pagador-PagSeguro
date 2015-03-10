@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 from urllib import urlencode
+
 from li_common.comunicacao import requisicao
-from pagador import settings
-from pagador.reloaded import servicos
+
+from pagador import settings, servicos
 
 
 class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-from pagador import settings
-
-from pagador.reloaded import entidades
+from pagador import settings, entidades
 from pagador_pagseguro.reloaded import cadastro
 
 CODIGO_GATEWAY = 1
