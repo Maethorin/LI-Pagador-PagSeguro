@@ -67,7 +67,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
         raise self.InstalacaoNaoFinalizada(u'Erro ao entrar em contato com o PagSeguro. Código: {} - Resposta: {}'.format(resposta.status_code, resposta.conteudo))
 
     def desinstalar(self, dados):
-        return {'redirect': 'https://{}pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'.format(self.sandbox)}
+        return {'url': 'https://{}pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'.format(self.sandbox)}
 
 
 class Credenciador(servicos.Credenciador):
