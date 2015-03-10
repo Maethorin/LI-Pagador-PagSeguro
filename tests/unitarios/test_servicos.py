@@ -186,12 +186,12 @@ class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
     def test_deve_retornar_redirect_pra_pagina_autorizacoes(self):
         instalador = servicos.InstalaMeioDePagamento(8, {})
-        instalador.desinstalar({}).should.be.equal({'redirect': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
+        instalador.desinstalar({}).should.be.equal({'url': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 
     @mock.patch('pagador.reloaded.entidades.ParametrosDeContrato', mock.MagicMock())
     @mock.patch('pagador_pagseguro.reloaded.servicos.settings', autospec=True)
     def test_nao_deve_usar_sandbox_na_url_se_for_production(self, settings_mock):
         settings_mock.ENVIRONMENT = 'production'
         instalador = servicos.InstalaMeioDePagamento(8, {})
-        instalador.desinstalar({}).should.be.equal({'redirect': 'https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
+        instalador.desinstalar({}).should.be.equal({'url': 'https://pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 

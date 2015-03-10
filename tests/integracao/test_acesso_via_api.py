@@ -47,7 +47,7 @@ class InstalacaoMeioDePagamentoDaLoja(TestBase):
         response.status_code.should.be.equal(200)
         configuracao.instalar.assert_called_with({'token': u'ZES'})
 
-    @mock.patch('api_pagador.reloaded.recursos.redirect')
+    @mock.patch('api_pagador.recursos.redirect')
     @mock.patch('pagador_pagseguro.reloaded.entidades.ConfiguracaoMeioPagamento')
     def test_deve_redirecionar_se_tiver_redirect_no_conteudo(self, configuracao_mock, redirect_mock):
         configuracao = mock.MagicMock()
