@@ -121,6 +121,7 @@ class EntregaPagamento(servicos.EntregaPagamento):
             else:
                 mensagens.append('{} - {}'.format(erros['error']['code'], erros['error']['message']))
             raise self.EnvioNaoRealizado(u'Ocorreram erros no envio dos dados para o PagSeguro', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=mensagens)
+        raise self.EnvioNaoRealizado(u'O PagSeguro não enviou uma resposta válida', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=[])
 
 
 class SituacoesDePagamento(servicos.SituacoesDePagamento):
