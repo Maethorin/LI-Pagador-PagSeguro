@@ -153,7 +153,7 @@ class RegistraResultado(servicos.RegistraResultado):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def monta_dados_pagamento(self):
-        if self.resposta:
+        if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
             self.dados_pagamento['identificador_id'] = self.dados['transacao']
             self.pedido_numero = self.dados["referencia"]
             transacao = self.resposta.conteudo['transaction']
@@ -162,16 +162,21 @@ class RegistraResultado(servicos.RegistraResultado):
             if 'grossAmount' in transacao:
                 self.dados_pagamento['valor_pago'] = transacao['grossAmount']
             self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
-        self.resultado = {'resultado': 'OK'}
+            self.resultado = {'resultado': 'OK'}
+        else:
+            self.resultado = {'resultado': 'ERRO'}
+
+    def _gera_dados_envio(self):
+        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+        return {
+            'appKey': parametros['app_secret'],
+            'appId': parametros['app_id'],
+        }
 
     def obtem_informacoes_pagamento(self):
         if self.deve_obter_informacoes_pagseguro:
-            aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
-            parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
-            self.dados_enviados = {
-                'appKey': parametros['app_secret'],
-                'appId': parametros['app_id'],
-            }
+            self.dados_enviados = self._gera_dados_envio()
             self.resposta = self.conexao.get(self.url, dados=self.dados_enviados)
 
     @property
@@ -187,14 +192,13 @@ class RegistraNotificacao(servicos.RegistraResultado):
     def __init__(self, loja_id, dados=None):
         super(RegistraNotificacao, self).__init__(loja_id, dados)
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
-        self.redirect_para = None
         self.faz_http = True
 
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def monta_dados_pagamento(self):
-        if self.resposta:
+        if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
             transacao = self.resposta.conteudo['transaction']
             self.pedido_numero = transacao["reference"]
             if 'code' in transacao:
@@ -202,17 +206,22 @@ class RegistraNotificacao(servicos.RegistraResultado):
             if 'grossAmount' in transacao:
                 self.dados_pagamento['valor_pago'] = transacao['grossAmount']
             self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
-        self.resultado = {'resultado': 'OK'}
+            self.resultado = {'resultado': 'OK'}
+        else:
+            self.resultado = {'resultado': 'ERRO'}
+
+    def _gera_dados_envio(self):
+        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+        return {
+            'appKey': parametros['app_secret'],
+            'appId': parametros['app_id'],
+        }
 
     def obtem_informacoes_pagamento(self):
         if self.deve_obter_informacoes_pagseguro:
-            aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
-            parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
-            dados = {
-                'appKey': parametros['app_secret'],
-                'appId': parametros['app_id'],
-            }
-            self.resposta = self.conexao.get(self.url, dados=dados)
+            self.dados_enviados = self._gera_dados_envio()
+            self.resposta = self.conexao.get(self.url, dados=self.dados_enviados)
 
     @property
     def deve_obter_informacoes_pagseguro(self):

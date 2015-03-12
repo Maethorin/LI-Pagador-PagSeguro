@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from decimal import Decimal
 import unittest
 
 import mock
@@ -383,3 +384,390 @@ class PagSeguroEntregaPagamento(unittest.TestCase):
             status_code=500, sucesso=False, erro_servidor=False, timeout=False, nao_autenticado=False, nao_autorizado=False
         )
         entregador.processa_dados_pagamento.when.called_with().should.throw(entregador.EnvioNaoRealizado)
+
+
+class PagSeguroRegistraResultado(unittest.TestCase):
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_dizer_que_faz_http(self):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.faz_http.should.be.truthy
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_definir_resposta(self):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.resposta.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_definir_url_com_sandbox(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id'})
+        registrador.url.should.be.equal('https://ws.sandbox.pagseguro.uol.com.br/v3/transactions/transacao-id')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.sandbox', '')
+    def test_deve_definir_url_sem_sandbox(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id'})
+        registrador.url.should.be.equal('https://ws.pagseguro.uol.com.br/v3/transactions/transacao-id')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
+    def test_deve_montar_conexao(self, obter_mock):
+        obter_mock.return_value = 'conexao'
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.conexao.should.be.equal('conexao')
+        obter_mock.assert_called_with(formato_envio=servicos.requisicao.Formato.querystring, formato_resposta=servicos.requisicao.Formato.xml)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
+    def test_deve_definir_refirect_para_com_next_url(self, obter_mock):
+        obter_mock.return_value = 'conexao'
+        registrador = servicos.RegistraResultado(1234, dados={'next_url': 'url-next'})
+        registrador.redirect_para.should.be.equal('url-next')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
+    def test_deve_definir_refirect_para_como_none(self, obter_mock):
+        obter_mock.return_value = 'conexao'
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.redirect_para.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.Credenciador')
+    def test_deve_definir_credenciais(self, credenciador_mock):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        credenciador_mock.return_value = 'credenciador'
+        registrador.configuracao = 'configuracao'
+        registrador.define_credenciais()
+        registrador.conexao.credenciador.should.be.equal('credenciador')
+        credenciador_mock.assert_called_with(configuracao='configuracao')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_qdo_sucesso(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'code': 'code-id',
+                    'grossAmount': '154.50',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id', 'valor_pago': '154.50'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_valor(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'code': 'code-id',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_id(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'grossAmount': '154.50',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'valor_pago': '154.50'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_resposta(self):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.dados_pagamento.should.be.equal({})
+        registrador.situacao_pedido.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_resposta_sem_sucesso(self):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id'})
+        registrador.resposta = mock.MagicMock(
+            sucesso=False
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.dados_pagamento.should.be.equal({})
+        registrador.situacao_pedido.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado._gera_dados_envio')
+    def test_nao_deve_obter_informacaoes_de_pagamento_sem_transacao(self, gera_mock):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.obtem_informacoes_pagamento()
+        gera_mock.called.should.be.falsy
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado._gera_dados_envio')
+    def test_deve_obter_informacaoes_de_pagamento_qdo_sucesso(self, gera_mock, conexao_mock):
+        gera_mock.return_value = 'dados_envio'
+        conexao_mock.return_value.get.return_value = 'resultado-get'
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.obtem_informacoes_pagamento()
+        registrador.resposta.should.be.equal('resultado-get')
+        registrador.dados_enviados = 'dados_envio'
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado._gera_dados_envio')
+    def test_deve_obter_informacaoes_de_pagamento_chamando_metodos(self, gera_mock, conexao_mock):
+        gera_mock.return_value = 'dados_envio'
+        conexao_mock.return_value.get.return_value = 'resultado-get'
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.obtem_informacoes_pagamento()
+        gera_mock.called.should.be.truthy
+        conexao_mock.return_value.get.assert_called_with('https://ws.sandbox.pagseguro.uol.com.br/v3/transactions/transacao-id', dados='dados_envio')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio(self, pagador_mock):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        registrador.dados_enviados.should.be.equal({'appId': 'app-id', 'appKey': 'app-secret'})
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_criando_entidades(self, pagador_mock):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        pagador_mock.assert_called_with('ParametrosDeContrato', loja_id=1234)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_padrao(self, pagador_mock):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_alternativa(self, pagador_mock):
+        registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro_alternativo')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro_alternativo')
+
+
+class PagSeguroRegistraNotificacao(unittest.TestCase):
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_dizer_que_faz_http(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.faz_http.should.be.truthy
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_definir_resposta(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.resposta.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_definir_url_com_sandbox(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code'})
+        registrador.url.should.be.equal('https://ws.sandbox.pagseguro.uol.com.br/v3/transactions/notifications/notification-code')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.sandbox', '')
+    def test_deve_definir_url_sem_sandbox(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code'})
+        registrador.url.should.be.equal('https://ws.pagseguro.uol.com.br/v3/transactions/notifications/notification-code')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao')
+    def test_deve_montar_conexao(self, obter_mock):
+        obter_mock.return_value = 'conexao'
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.conexao.should.be.equal('conexao')
+        obter_mock.assert_called_with(formato_envio=servicos.requisicao.Formato.querystring, formato_resposta=servicos.requisicao.Formato.xml)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao')
+    def test_nao_deve_definir_refirect_para(self, obter_mock):
+        obter_mock.return_value = 'conexao'
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.redirect_para.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.Credenciador')
+    def test_deve_definir_credenciais(self, credenciador_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        credenciador_mock.return_value = 'credenciador'
+        registrador.configuracao = 'configuracao'
+        registrador.define_credenciais()
+        registrador.conexao.credenciador.should.be.equal('credenciador')
+        credenciador_mock.assert_called_with(configuracao='configuracao')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_qdo_sucesso(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'reference': 2222,
+                    'code': 'code-id',
+                    'grossAmount': '154.50',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'transacao_id': 'code-id', 'valor_pago': '154.50'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_valor(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'reference': 2222,
+                    'code': 'code-id',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'transacao_id': 'code-id'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_id(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'reference': 2222,
+                    'grossAmount': '154.50',
+                    'status': '3'
+                },
+            }
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'valor_pago': '154.50'})
+        registrador.situacao_pedido.should.be.equal(4)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_sem_resposta(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.dados_pagamento.should.be.equal({})
+        registrador.situacao_pedido.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    def test_deve_montar_dados_de_pagamento_resposta_sem_sucesso(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code'})
+        registrador.resposta = mock.MagicMock(
+            sucesso=False
+        )
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.dados_pagamento.should.be.equal({})
+        registrador.situacao_pedido.should.be.none
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao._gera_dados_envio')
+    def test_nao_deve_obter_informacaoes_de_pagamento_sem_transacao(self, gera_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.obtem_informacoes_pagamento()
+        gera_mock.called.should.be.falsy
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao')
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao._gera_dados_envio')
+    def test_deve_obter_informacaoes_de_pagamento_qdo_sucesso(self, gera_mock, conexao_mock):
+        gera_mock.return_value = 'dados_envio'
+        conexao_mock.return_value.get.return_value = 'resultado-get'
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.obtem_informacoes_pagamento()
+        registrador.resposta.should.be.equal('resultado-get')
+        registrador.dados_enviados = 'dados_envio'
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao')
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao._gera_dados_envio')
+    def test_deve_obter_informacaoes_de_pagamento_chamando_metodos(self, gera_mock, conexao_mock):
+        gera_mock.return_value = 'dados_envio'
+        conexao_mock.return_value.get.return_value = 'resultado-get'
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.obtem_informacoes_pagamento()
+        gera_mock.called.should.be.truthy
+        conexao_mock.return_value.get.assert_called_with('https://ws.sandbox.pagseguro.uol.com.br/v3/transactions/notifications/notification-code', dados='dados_envio')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio(self, pagador_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        registrador.dados_enviados.should.be.equal({'appId': 'app-id', 'appKey': 'app-secret'})
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_criando_entidades(self, pagador_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        pagador_mock.assert_called_with('ParametrosDeContrato', loja_id=1234)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_padrao(self, pagador_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.cria_entidade_pagador')
+    def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_alternativa(self, pagador_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro_alternativo')
+        parametros_mock = mock.MagicMock()
+        parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
+        pagador_mock.side_effect = parametros_mock
+        registrador.obtem_informacoes_pagamento()
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro_alternativo')
