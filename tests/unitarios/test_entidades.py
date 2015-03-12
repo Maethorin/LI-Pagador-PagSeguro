@@ -35,7 +35,7 @@ class PagSeguroConfiguracaoMeioPagamento(unittest.TestCase):
         configuracao.eh_aplicacao.should.be.truthy
 
 
-class MontandoMalote(unittest.TestCase):
+class PagSeguroMontandoMalote(unittest.TestCase):
     def test_deve_definir_tipo_de_envio_pac(self):
         entidades.TipoEnvio('pac').valor.should.be.equal(1)
 
