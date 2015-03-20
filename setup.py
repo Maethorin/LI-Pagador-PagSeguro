@@ -33,7 +33,11 @@ def read(fname):
 
 setup(
     name='li-pagador-pagseguro',
+<<<<<<< HEAD
     version='1.0.12',
+=======
+    version='2.0.4',
+>>>>>>> pagador-reloaded
     url='https://github.com/lojaintegrada/LI-Pagador-PagSeguro',
     license='MIT',
     description='Meio de pagamento usando o PagSeguro (https://pagseguro.uol.com.br)',
