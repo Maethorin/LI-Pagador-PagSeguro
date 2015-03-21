@@ -452,7 +452,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal('sucesso')
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id', 'valor_pago': '154.50'})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -469,7 +469,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal('sucesso')
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id'})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -486,7 +486,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal('sucesso')
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'valor_pago': '154.50'})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -494,7 +494,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
     def test_deve_montar_dados_de_pagamento_sem_resposta(self):
         registrador = servicos.RegistraResultado(1234, dados={})
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.resultado.should.be.equal('pendente')
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 
@@ -505,7 +505,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             sucesso=False
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.resultado.should.be.equal('pendente')
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 
