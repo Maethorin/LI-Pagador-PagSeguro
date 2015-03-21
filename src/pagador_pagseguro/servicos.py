@@ -162,9 +162,9 @@ class RegistraResultado(servicos.RegistraResultado):
             if 'grossAmount' in transacao:
                 self.dados_pagamento['valor_pago'] = transacao['grossAmount']
             self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
-            self.resultado = {'resultado': 'OK'}
+            self.resultado = 'sucesso'
         else:
-            self.resultado = {'resultado': 'ERRO'}
+            self.resultado = 'pendente'
 
     def _gera_dados_envio(self):
         aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
@@ -185,7 +185,9 @@ class RegistraResultado(servicos.RegistraResultado):
 
     @property
     def url(self):
-        return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/{}'.format(self.sandbox, self.dados['transacao'])
+        if self.deve_obter_informacoes_pagseguro:
+            return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/{}'.format(self.sandbox, self.dados['transacao'])
+        return ''
 
 
 class RegistraNotificacao(servicos.RegistraResultado):
