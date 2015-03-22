@@ -231,4 +231,6 @@ class RegistraNotificacao(servicos.RegistraResultado):
 
     @property
     def url(self):
-        return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/notifications/{}'.format(self.sandbox, self.dados['notificationCode'])
+        if 'notificationCode' in self.dados:
+            return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/notifications/{}'.format(self.sandbox, self.dados['notificationCode'])
+        return ''
