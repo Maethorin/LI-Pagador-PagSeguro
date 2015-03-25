@@ -126,6 +126,6 @@ class ConfiguracaoMeioPagamento(entidades.ConfiguracaoMeioPagamento):
         self.campos = ['ativo', 'aplicacao', 'codigo_autorizacao', 'valor_minimo_aceitado', 'valor_minimo_parcela', 'mostrar_parcelamento', 'maximo_parcelas', 'parcelas_sem_juros']
         self.codigo_gateway = CODIGO_GATEWAY
         self.eh_gateway = True
-        super(ConfiguracaoMeioPagamento, self).__init__(loja_id, codigo_pagamento, eh_listagem)
+        super(ConfiguracaoMeioPagamento, self).__init__(loja_id, codigo_pagamento, eh_listagem=eh_listagem)
         self.formulario = cadastro.FormularioPagSeguro()
         self.eh_aplicacao = True
