@@ -409,6 +409,12 @@ class PagSeguroRegistraResultado(unittest.TestCase):
         registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id'})
         registrador.url.should.be.equal('https://ws.pagseguro.uol.com.br/v3/transactions/transacao-id')
 
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado.sandbox', '')
+    def test_deve_definir_url_sem_transacao(self):
+        registrador = servicos.RegistraResultado(1234, dados={})
+        registrador.url.should.be.equal('')
+
     @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao')
     def test_deve_montar_conexao(self, obter_mock):
         obter_mock.return_value = 'conexao'
@@ -603,6 +609,12 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
     def test_deve_definir_url_sem_sandbox(self):
         registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code'})
         registrador.url.should.be.equal('https://ws.pagseguro.uol.com.br/v3/transactions/notifications/notification-code')
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.sandbox', '')
+    def test_deve_definir_url_sem_notification_code(self):
+        registrador = servicos.RegistraNotificacao(1234, dados={})
+        registrador.url.should.be.equal('')
 
     @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao')
     def test_deve_montar_conexao(self, obter_mock):
