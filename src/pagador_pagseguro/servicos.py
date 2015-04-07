@@ -203,11 +203,12 @@ class RegistraNotificacao(servicos.RegistraResultado):
         if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
             transacao = self.resposta.conteudo['transaction']
             self.pedido_numero = transacao["reference"]
-            if 'code' in transacao:
-                self.dados_pagamento['transacao_id'] = transacao['code']
-            if 'grossAmount' in transacao:
-                self.dados_pagamento['valor_pago'] = transacao['grossAmount']
-            self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+            pedido_pagamento = self.cria_entidade_pagador('PedidoPagamento', loja_id=self.configuracao.loja_id, pedido_numero=self.pedido_numero, codigo_pagamento=self.configuracao.meio_pagamento.codigo)
+            pedido_pagamento.preencher_do_banco()
+            if transacao.get('code', None) == pedido_pagamento.transacao_id:
+                if 'grossAmount' in transacao:
+                    self.dados_pagamento['valor_pago'] = transacao['grossAmount']
+                self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
             self.resultado = {'resultado': 'OK'}
         else:
             self.resultado = {'resultado': 'ERRO'}
