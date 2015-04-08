@@ -369,6 +369,20 @@ class PagSeguroEntregaPagamento(unittest.TestCase):
         entregador.processa_dados_pagamento.when.called_with().should.throw(entregador.EnvioNaoRealizado)
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
+    def test_deve_disparar_erro_se_tiver_erro_unicode_na_reposta(self):
+        entregador = servicos.EntregaPagamento(1234)
+        entregador.pedido = mock.MagicMock(numero=123)
+        entregador.malote = mock.MagicMock()
+        entregador.malote.to_dict.return_value = 'malote'
+        entregador.resposta = mock.MagicMock(
+            conteudo={
+                'errors': {'error': {'code': 'code1', 'message': u'não zás'}}
+            },
+            status_code=500, sucesso=False, erro_servidor=False, timeout=False, nao_autenticado=False, nao_autorizado=False
+        )
+        entregador.processa_dados_pagamento.when.called_with().should.throw(entregador.EnvioNaoRealizado)
+
+    @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_disparar_erro_se_tiver_lista_de_erros_na_reposta(self):
         entregador = servicos.EntregaPagamento(1234)
         entregador.pedido = mock.MagicMock(numero=123)
@@ -378,7 +392,7 @@ class PagSeguroEntregaPagamento(unittest.TestCase):
             conteudo={
                 'errors': [
                     {'error': {'code': 'code1', 'message': 'message1'}},
-                    {'error': {'code': 'code2', 'message': 'message2'}}
+                    {'error': {'code': 'code2', 'message': u'não zás'}}
                 ]
             },
             status_code=500, sucesso=False, erro_servidor=False, timeout=False, nao_autenticado=False, nao_autorizado=False
