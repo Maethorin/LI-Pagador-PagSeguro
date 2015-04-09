@@ -205,7 +205,14 @@ class RegistraNotificacao(servicos.RegistraResultado):
             self.pedido_numero = transacao["reference"]
             pedido_pagamento = self.cria_entidade_pagador('PedidoPagamento', loja_id=self.configuracao.loja_id, pedido_numero=self.pedido_numero, codigo_pagamento=self.configuracao.meio_pagamento.codigo)
             pedido_pagamento.preencher_do_banco()
-            if transacao.get('code', None) == pedido_pagamento.transacao_id:
+            if pedido_pagamento.transacao_id:
+                if transacao.get('code', None) == pedido_pagamento.transacao_id:
+                    if 'grossAmount' in transacao:
+                        self.dados_pagamento['valor_pago'] = transacao['grossAmount']
+                    self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+            else:
+                if 'code' in transacao:
+                    self.dados_pagamento['transacao_id'] = transacao['code']
                 if 'grossAmount' in transacao:
                     self.dados_pagamento['valor_pago'] = transacao['grossAmount']
                 self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
