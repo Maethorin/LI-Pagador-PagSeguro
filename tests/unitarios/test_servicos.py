@@ -723,6 +723,29 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
 
     @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
     @mock.patch('pagador.entidades.PedidoPagamento')
+    def test_deve_definir_transacao_id_se_pedido_pagamento_nao_tiver(self, pedido_pagamento_mock):
+        registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
+        registrador.resposta = mock.MagicMock(
+            sucesso=True,
+            conteudo={
+                'transaction': {
+                    'reference': 2222,
+                    'code': 'code-id',
+                    'grossAmount': '154.50',
+                    'status': '7'
+                },
+            }
+        )
+        registrador.configuracao = mock.MagicMock(loja_id=1234)
+        pedido_pagamento = mock.MagicMock(transacao_id=None)
+        pedido_pagamento_mock.return_value = pedido_pagamento
+        registrador.monta_dados_pagamento()
+        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.dados_pagamento.should.be.equal({'transacao_id': 'code-id', 'valor_pago': '154.50'})
+        registrador.situacao_pedido.should.be.equal(8)
+
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.obter_conexao', mock.MagicMock())
+    @mock.patch('pagador.entidades.PedidoPagamento')
     def test_nao_deve_montar_dados_de_pagamento_sem_code(self, pedido_pagamento_mock):
         registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
         registrador.resposta = mock.MagicMock(

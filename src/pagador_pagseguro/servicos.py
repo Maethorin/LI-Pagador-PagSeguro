@@ -199,6 +199,11 @@ class RegistraNotificacao(servicos.RegistraResultado):
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
+    def _define_valor_e_situacao(self, transacao):
+        if 'grossAmount' in transacao:
+            self.dados_pagamento['valor_pago'] = transacao['grossAmount']
+        self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+
     def monta_dados_pagamento(self):
         if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
             transacao = self.resposta.conteudo['transaction']
@@ -207,15 +212,11 @@ class RegistraNotificacao(servicos.RegistraResultado):
             pedido_pagamento.preencher_do_banco()
             if pedido_pagamento.transacao_id:
                 if transacao.get('code', None) == pedido_pagamento.transacao_id:
-                    if 'grossAmount' in transacao:
-                        self.dados_pagamento['valor_pago'] = transacao['grossAmount']
-                    self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+                    self._define_valor_e_situacao(transacao)
             else:
                 if 'code' in transacao:
                     self.dados_pagamento['transacao_id'] = transacao['code']
-                if 'grossAmount' in transacao:
-                    self.dados_pagamento['valor_pago'] = transacao['grossAmount']
-                self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
+                self._define_valor_e_situacao(transacao)
             self.resultado = {'resultado': 'OK'}
         else:
             self.resultado = {'resultado': 'ERRO'}
