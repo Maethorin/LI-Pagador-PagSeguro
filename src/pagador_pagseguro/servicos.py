@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 from urllib import urlencode
 
 from li_common.comunicacao import requisicao
@@ -206,7 +207,10 @@ class RegistraNotificacao(servicos.RegistraResultado):
 
     def monta_dados_pagamento(self):
         if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
-            transacao = self.resposta.conteudo['transaction']
+            try:
+                transacao = self.resposta.conteudo['transaction']
+            except KeyError:
+                raise servicos.RegistroDePagamentoInvalido(u'O PagSeguro não retornou os dados da transação. Os dados retornados foram: {}'.format(json.dumps(self.resposta.conteudo)))
             self.pedido_numero = int(transacao["reference"])
             pedido_pagamento = self.cria_entidade_pagador('PedidoPagamento', loja_id=self.configuracao.loja_id, pedido_numero=self.pedido_numero, codigo_pagamento=self.configuracao.meio_pagamento.codigo)
             pedido_pagamento.preencher_do_banco()
@@ -251,3 +255,4 @@ class RegistraNotificacao(servicos.RegistraResultado):
         if 'notificationCode' in self.dados:
             return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/notifications/{}'.format(self.sandbox, self.dados['notificationCode'])
         return ''
+
