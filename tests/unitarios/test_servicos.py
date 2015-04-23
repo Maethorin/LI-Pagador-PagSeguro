@@ -672,7 +672,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
         pedido_pagamento = mock.MagicMock(transacao_id='code-id')
         pedido_pagamento_mock.return_value = pedido_pagamento
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal({'resultado': 'OK', 'detalhes': ['Pedido tem transacao_id (code-id)', u'transaction.code (code-id) é igual ao pedido.transacao_id (code-id)']})
         registrador.dados_pagamento.should.be.equal({'valor_pago': '154.50'})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -694,7 +694,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
         pedido_pagamento = mock.MagicMock(transacao_id='code-id')
         pedido_pagamento_mock.return_value = pedido_pagamento
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal({'resultado': 'OK', 'detalhes': ['Pedido tem transacao_id (code-id)', u'transaction.code (code-id) é igual ao pedido.transacao_id (code-id)']})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -717,7 +717,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
         pedido_pagamento = mock.MagicMock(transacao_id='code-diferente')
         pedido_pagamento_mock.return_value = pedido_pagamento
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal({'resultado': 'OK', 'detalhes': ['Pedido tem transacao_id (code-diferente)', u'transaction.code (code-id) é diferente ao pedido.transacao_id (code-diferente)']})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.equal(None)
 
@@ -740,7 +740,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
         pedido_pagamento = mock.MagicMock(transacao_id=None)
         pedido_pagamento_mock.return_value = pedido_pagamento
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal({'resultado': 'OK', 'detalhes': [u'Pedido não tem transacao_id (None)']})
         registrador.dados_pagamento.should.be.equal({'transacao_id': 'code-id', 'valor_pago': '154.50'})
         registrador.situacao_pedido.should.be.equal(8)
 
@@ -762,7 +762,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
         pedido_pagamento = mock.MagicMock(transacao_id='code-id')
         pedido_pagamento_mock.return_value = pedido_pagamento
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'OK'})
+        registrador.resultado.should.be.equal({'resultado': 'ERRO', 'detalhes': [u'PagSeguro não enviou transaction.code']})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.equal(None)
 
@@ -770,7 +770,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
     def test_deve_montar_dados_de_pagamento_sem_resposta(self):
         registrador = servicos.RegistraNotificacao(1234, dados={})
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.resultado.should.be.equal({'resultado': 'ERRO', 'detalhes': [u'Não foi recebida uma resposta válida do PagSeguro']})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 
@@ -781,7 +781,7 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
             sucesso=False
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal({'resultado': 'ERRO'})
+        registrador.resultado.should.be.equal({'resultado': 'ERRO', 'detalhes': [u'Não foi recebida uma resposta válida do PagSeguro']})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 

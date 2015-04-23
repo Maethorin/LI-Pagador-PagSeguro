@@ -207,19 +207,27 @@ class RegistraNotificacao(servicos.RegistraResultado):
     def monta_dados_pagamento(self):
         if self.deve_obter_informacoes_pagseguro and self.resposta.sucesso:
             transacao = self.resposta.conteudo['transaction']
-            self.pedido_numero = transacao["reference"]
+            self.pedido_numero = int(transacao["reference"])
             pedido_pagamento = self.cria_entidade_pagador('PedidoPagamento', loja_id=self.configuracao.loja_id, pedido_numero=self.pedido_numero, codigo_pagamento=self.configuracao.meio_pagamento.codigo)
             pedido_pagamento.preencher_do_banco()
-            if pedido_pagamento.transacao_id:
-                if transacao.get('code', None) == pedido_pagamento.transacao_id:
-                    self._define_valor_e_situacao(transacao)
-            else:
-                if 'code' in transacao:
+            detalhes = []
+            if 'code' in transacao:
+                if pedido_pagamento.transacao_id:
+                    detalhes.append('Pedido tem transacao_id ({})'.format(pedido_pagamento.transacao_id))
+                    if transacao['code'] == pedido_pagamento.transacao_id:
+                        detalhes.append(u'transaction.code ({}) é igual ao pedido.transacao_id ({})'.format(transacao['code'], pedido_pagamento.transacao_id))
+                        self._define_valor_e_situacao(transacao)
+                    else:
+                        detalhes.append(u'transaction.code ({}) é diferente ao pedido.transacao_id ({})'.format(transacao['code'], pedido_pagamento.transacao_id))
+                else:
+                    detalhes.append(u'Pedido não tem transacao_id ({})'.format(pedido_pagamento.transacao_id))
                     self.dados_pagamento['transacao_id'] = transacao['code']
-                self._define_valor_e_situacao(transacao)
-            self.resultado = {'resultado': 'OK'}
+                    self._define_valor_e_situacao(transacao)
+                self.resultado = {'resultado': 'OK', 'detalhes': detalhes}
+            else:
+                self.resultado = {'resultado': 'ERRO', 'detalhes': [u'PagSeguro não enviou transaction.code']}
         else:
-            self.resultado = {'resultado': 'ERRO'}
+            self.resultado = {'resultado': 'ERRO', 'detalhes': [u'Não foi recebida uma resposta válida do PagSeguro']}
 
     def _gera_dados_envio(self):
         aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
