@@ -82,6 +82,11 @@ class Credenciador(servicos.Credenciador):
     def obter_credenciais(self):
         return self.codigo_autorizacao
 
+MENSAGENS_ERRO = {
+    '11033': u'Um ou mais produtos no carrinho está sem nome.',
+    '11013': u'O CEP do comprador informado não parece ser válido'
+}
+
 
 class EntregaPagamento(servicos.EntregaPagamento):
     def __init__(self, loja_id, plano_indice=1, dados=None):
@@ -102,6 +107,16 @@ class EntregaPagamento(servicos.EntregaPagamento):
     def processa_dados_pagamento(self):
         self.resultado = self._processa_resposta()
 
+    def trata_mensagem_conhecida(self, erro, mensagens):
+        code = str(erro['error']['code'])
+        message = erro['error']['message']
+        mensagem_conhecida = False
+        if code in MENSAGENS_ERRO:
+            message = MENSAGENS_ERRO['code']
+            mensagem_conhecida = True
+        mensagens.append(u'{} - {}'.format(code, message))
+        return mensagem_conhecida
+
     def _processa_resposta(self):
         status_code = self.resposta.status_code
         if self.resposta.erro_servidor:
@@ -115,12 +130,15 @@ class EntregaPagamento(servicos.EntregaPagamento):
             return {'url': url}
         if 'errors' in self.resposta.conteudo:
             erros = self.resposta.conteudo['errors']
+            sem_excecao = False
             mensagens = []
             if type(erros) is list:
                 for erro in erros:
-                    mensagens.append(u'{} - {}'.format(erro['error']['code'], erro['error']['message']))
+                    sem_excecao = self.trata_mensagem_conhecida(erro, mensagens)
             else:
-                mensagens.append(u'{} - {}'.format(erros['error']['code'], erros['error']['message']))
+                sem_excecao = self.trata_mensagem_conhecida(erros, mensagens)
+            if sem_excecao:
+                return {'mensagem': u'\n'.join(mensagens), 'status_code': status_code, 'fatal': True}
             raise self.EnvioNaoRealizado(u'Ocorreram erros no envio dos dados para o PagSeguro', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=mensagens)
         raise self.EnvioNaoRealizado(u'O PagSeguro não enviou uma resposta válida', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=[])
 
