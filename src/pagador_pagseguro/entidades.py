@@ -79,10 +79,14 @@ class Malote(entidades.Malote):
     def _cria_item(self, indice, item_pedido):
         indice += 1
         item_id = 'item_id{}'.format(indice)
-        setattr(self, item_id.format(indice), self.formatador.trata_unicode_com_limite(item_pedido.sku, 100, ascii=True))
+        sku = self.formatador.trata_unicode_com_limite(item_pedido.sku, 100, ascii=True)
+        setattr(self, item_id.format(indice), sku)
         self._chaves_alternativas_para_serializacao[item_id] = 'itemId{}'.format(indice)
         item_description = 'item_description{}'.format(indice)
-        setattr(self, item_description, self.formatador.trata_unicode_com_limite(item_pedido.nome, 100, ascii=True))
+        descricao = self.formatador.trata_unicode_com_limite(item_pedido.nome, 100, ascii=True)
+        if not descricao:
+            descricao = sku
+        setattr(self, item_description, descricao)
         self._chaves_alternativas_para_serializacao[item_description] = 'itemDescription{}'.format(indice)
         item_amount = 'item_amount{}'.format(indice)
         setattr(self, item_amount, self.formatador.formata_decimal(item_pedido.preco_venda))
