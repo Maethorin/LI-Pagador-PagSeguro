@@ -103,7 +103,7 @@ class Malote(entidades.Malote):
         self.currency = 'BRL'
         self.reference = pedido.numero
         self.notification_url = '{}/notificacao'.format(notification_url)
-        self.redirect_url = '{}/resultado?next_url={}&referencia={}'.format(notification_url, dados['next_url'], pedido.numero)
+        self.redirect_url = u'{}/resultado?next_url={}&referencia={}'.format(notification_url, dados['next_url'], pedido.numero)
         self.sender_name = pedido.cliente_nome_ascii
         self.sender_area_code = numero_telefone[0]
         self.sender_phone = numero_telefone[1]
