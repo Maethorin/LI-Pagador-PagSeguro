@@ -228,7 +228,7 @@ class RegistraNotificacao(servicos.RegistraResultado):
             try:
                 transacao = self.resposta.conteudo['transaction']
             except KeyError:
-                raise servicos.RegistroDePagamentoInvalido(u'O PagSeguro não retornou os dados da transação. Os dados retornados foram: {}'.format(json.dumps(self.resposta.conteudo)))
+                raise self.RegistroDePagamentoInvalido(u'O PagSeguro não retornou os dados da transação. Os dados retornados foram: {}'.format(json.dumps(self.resposta.conteudo)))
             self.pedido_numero = int(transacao["reference"])
             pedido_pagamento = self.cria_entidade_pagador('PedidoPagamento', loja_id=self.configuracao.loja_id, pedido_numero=self.pedido_numero, codigo_pagamento=self.configuracao.meio_pagamento.codigo)
             pedido_pagamento.preencher_do_banco()
