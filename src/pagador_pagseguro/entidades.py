@@ -96,6 +96,8 @@ class Malote(entidades.Malote):
         self._chaves_alternativas_para_serializacao[item_quantity] = 'itemQuantity{}'.format(indice)
 
     def monta_conteudo(self, pedido, parametros_contrato=None, dados=None):
+        if 'next_url' not in dados:
+            raise self.DadosInvalidos(u'Os dados de envio não foram processados corretamente no carrinho.')
         notification_url = settings.PAGSEGURO_PREFERENCE_NOTIFICATION_URL.format(self.configuracao.loja_id)
         numero_telefone = pedido.cliente_telefone
         self.app_key = parametros_contrato['app_secret']
