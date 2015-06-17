@@ -274,3 +274,44 @@ class RegistraNotificacao(servicos.RegistraResultado):
             return 'https://ws.{}pagseguro.uol.com.br/v3/transactions/notifications/{}'.format(self.sandbox, self.dados['notificationCode'])
         return ''
 
+
+class AtualizaTransacoes(servicos.AtualizaTransacoes):
+    def __init__(self):
+        self.url = 'https://ws.{}pagseguro.uol.com.br/v3/transactions'.format(self.sandbox)
+        self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
+        self.atualizados = 0
+
+    def define_credenciais(self):
+        self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
+
+    def _gera_dados_envio(self):
+        initial_date = self.dados['data_inicial'].strftime('%Y-%m-%dT00:00')
+        final_date = self.dados['data_final'].strftime('%Y-%m-%dT%H:%S')
+        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+        return {
+            'appKey': parametros['app_secret'],
+            'appId': parametros['app_id'],
+            'initialDate': initial_date,
+            'finalDate': final_date
+        }
+
+    def consulta_transacoes(self):
+        self.dados_enviados = self._gera_dados_envio()
+        self.resposta = self.conexao.get(self.url, dados=self.dados_enviados)
+
+    def analisa_resultado_transacoes(self):
+        if self.resposta.sucesso:
+            transacoes = self.resposta.conteudo['transactionSearchResult']['transactions']
+            if type(transacoes) is dict:
+                self.dados_pedido = {
+                    'situacao_pedido': SituacoesDePagamento.do_tipo(transacoes['status']),
+                    'pedido_numero': transacoes['reference']
+                }
+            else:
+                self.dados_pedido = []
+                for transacao in transacoes:
+                    self.dados_pedido.append({
+                        'situacao_pedido': SituacoesDePagamento.do_tipo(transacao['status']),
+                        'pedido_numero': transacao['reference']
+                    })
