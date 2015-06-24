@@ -276,7 +276,8 @@ class RegistraNotificacao(servicos.RegistraResultado):
 
 
 class AtualizaTransacoes(servicos.AtualizaTransacoes):
-    def __init__(self):
+    def __init__(self, loja_id, dados):
+        super(AtualizaTransacoes, self).__init__(loja_id, dados)
         self.url = 'https://ws.{}pagseguro.uol.com.br/v3/transactions'.format(self.sandbox)
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
         self.atualizados = 0
@@ -285,8 +286,8 @@ class AtualizaTransacoes(servicos.AtualizaTransacoes):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def _gera_dados_envio(self):
-        initial_date = self.dados['data_inicial'].strftime('%Y-%m-%dT00:00')
-        final_date = self.dados['data_final'].strftime('%Y-%m-%dT%H:%S')
+        initial_date = '{}T00:00'.format(self.dados['data_inicial'])
+        final_date = '{}T23:59'.format(self.dados['data_final'])
         aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
         return {
@@ -302,16 +303,19 @@ class AtualizaTransacoes(servicos.AtualizaTransacoes):
 
     def analisa_resultado_transacoes(self):
         if self.resposta.sucesso:
-            transacoes = self.resposta.conteudo['transactionSearchResult']['transactions']
+            transacoes = self.resposta.conteudo['transactionSearchResult'].get('transactions', [])
             if type(transacoes) is dict:
                 self.dados_pedido = {
-                    'situacao_pedido': SituacoesDePagamento.do_tipo(transacoes['status']),
-                    'pedido_numero': transacoes['reference']
+                    'situacao_pedido': SituacoesDePagamento.do_tipo(transacoes['transaction']['status']),
+                    'pedido_numero': transacoes['transaction']['reference']
                 }
             else:
                 self.dados_pedido = []
                 for transacao in transacoes:
                     self.dados_pedido.append({
-                        'situacao_pedido': SituacoesDePagamento.do_tipo(transacao['status']),
-                        'pedido_numero': transacao['reference']
+                        'situacao_pedido': SituacoesDePagamento.do_tipo(transacao['transaction']['status']),
+                        'pedido_numero': transacao['transaction']['reference']
                     })
+        else:
+            if 'errors' in self.resposta.conteudo:
+                self.erros = self.resposta.conteudo
