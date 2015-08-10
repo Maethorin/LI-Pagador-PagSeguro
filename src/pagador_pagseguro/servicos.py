@@ -100,6 +100,12 @@ class EntregaPagamento(servicos.EntregaPagamento):
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
+    def montar_malote(self):
+        self.malote = self.cria_entidade_extensao('Malote', configuracao=self.configuracao)
+        aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
+        parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
+        self.malote.monta_conteudo(pedido=self.pedido, parametros_contrato=parametros, dados=self.dados)
+
     def envia_pagamento(self, tentativa=1):
         self.dados_enviados = self.malote.to_dict()
         self.resposta = self.conexao.post(self.url, self.dados_enviados)
