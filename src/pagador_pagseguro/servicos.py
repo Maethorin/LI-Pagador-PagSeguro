@@ -26,6 +26,8 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
     def montar_url_autorizacao(self):
         try:
             parametros_redirect = {'next_url': self.dados['next_url'], 'fase_atual': '2'}
+            if self.usa_alt:
+                parametros_redirect['ua'] = 1
         except KeyError:
             raise self.InstalacaoNaoFinalizada(u'Você precisa informar a url de redirecionamento na volta do PagSeguro na chave next_url do parâmetro dados.')
         dados = {
