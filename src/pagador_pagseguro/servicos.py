@@ -194,7 +194,7 @@ class RegistraResultado(servicos.RegistraResultado):
             self.resultado = 'pendente'
 
     def _gera_dados_envio(self):
-        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
         return {
             'appKey': parametros['app_secret'],
@@ -260,7 +260,7 @@ class RegistraNotificacao(servicos.RegistraResultado):
             self.resultado = {'resultado': 'ERRO', 'detalhes': [u'Não foi recebida uma resposta válida do PagSeguro']}
 
     def _gera_dados_envio(self):
-        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
         return {
             'appKey': parametros['app_secret'],
@@ -296,7 +296,7 @@ class AtualizaTransacoes(servicos.AtualizaTransacoes):
     def _gera_dados_envio(self):
         initial_date = '{}T00:00'.format(self.dados['data_inicial'])
         final_date = '{}T23:59'.format(self.dados['data_final'])
-        aplicacao = 'pagseguro_alternativo' if self.configuracao.aplicacao == 'pagseguro_alternativo' else 'pagseguro'
+        aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
         return {
             'appKey': parametros['app_secret'],

@@ -593,12 +593,12 @@ class PagSeguroRegistraResultado(unittest.TestCase):
     @mock.patch('pagador_pagseguro.servicos.RegistraResultado.cria_entidade_pagador')
     def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_alternativa(self, pagador_mock):
         registrador = servicos.RegistraResultado(1234, dados={'transacao': 'transacao-id', 'referencia': 2222})
-        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro_alternativo')
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro-alternativo')
         parametros_mock = mock.MagicMock()
         parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
         pagador_mock.side_effect = parametros_mock
         registrador.obtem_informacoes_pagamento()
-        parametros_mock.return_value.obter_para.assert_called_with('pagseguro_alternativo')
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro-alternativo')
 
 
 class PagSeguroRegistraNotificacao(unittest.TestCase):
@@ -849,9 +849,9 @@ class PagSeguroRegistraNotificacao(unittest.TestCase):
     @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao.cria_entidade_pagador')
     def test_deve_gerar_dados_envio_chamando_metodos_com_aplicacao_alternativa(self, pagador_mock):
         registrador = servicos.RegistraNotificacao(1234, dados={'notificationCode': 'notification-code', 'referencia': 2222})
-        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro_alternativo')
+        registrador.configuracao = mock.MagicMock(aplicacao='pagseguro-alternativo')
         parametros_mock = mock.MagicMock()
         parametros_mock.return_value.obter_para.return_value = {'app_secret': 'app-secret', 'app_id': 'app-id'}
         pagador_mock.side_effect = parametros_mock
         registrador.obtem_informacoes_pagamento()
-        parametros_mock.return_value.obter_para.assert_called_with('pagseguro_alternativo')
+        parametros_mock.return_value.obter_para.assert_called_with('pagseguro-alternativo')
