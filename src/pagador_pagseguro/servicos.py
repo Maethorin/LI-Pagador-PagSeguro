@@ -38,7 +38,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
                     {'code': 'SEARCH_TRANSACTIONS'},
                     {'code': 'RECEIVE_TRANSACTION_NOTIFICATIONS'},
                 ],
-                'redirectURL': '<![CDATA[{}?{}]]>'.format(settings.PAGSEGURO_REDIRECT_URL.format(self.loja_id), urlencode(parametros_redirect)),
+                'redirectURL': '<![CDATA[{}?{}]]>'.format(settings.INSTALAR_REDIRECT_URL.format(self.loja_id, 'pagseguro'), urlencode(parametros_redirect)),
             }
         }
         dados_autorizacao = {
