@@ -288,22 +288,23 @@ class AtualizaTransacoes(servicos.AtualizaTransacoes):
         super(AtualizaTransacoes, self).__init__(loja_id, dados)
         self.url = 'https://ws.{}pagseguro.uol.com.br/v3/transactions'.format(self.sandbox)
         self.conexao = self.obter_conexao(formato_envio=requisicao.Formato.querystring, formato_resposta=requisicao.Formato.xml)
-        self.atualizados = 0
 
     def define_credenciais(self):
         self.conexao.credenciador = Credenciador(configuracao=self.configuracao)
 
     def _gera_dados_envio(self):
-        initial_date = '{}T00:00'.format(self.dados['data_inicial'])
-        final_date = '{}T23:59'.format(self.dados['data_final'])
+        initial_date = self.dados['data_inicial']
+        final_date = self.dados.get('data_final')
         aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=self.loja_id).obter_para(aplicacao)
-        return {
+        retorno = {
             'appKey': parametros['app_secret'],
             'appId': parametros['app_id'],
-            'initialDate': initial_date,
-            'finalDate': final_date
+            'initialDate': initial_date
         }
+        if final_date:
+            retorno['finalDate'] = final_date
+        return retorno
 
     def consulta_transacoes(self):
         self.dados_enviados = self._gera_dados_envio()
