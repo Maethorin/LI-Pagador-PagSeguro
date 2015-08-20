@@ -91,7 +91,17 @@ class PagSeguroEnviandoPagamento(TestBase):
     def test_deve_enviar_pagamento(self, entrega_mock):
         entrega_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'pagamento-enviado'})
         response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
-        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'zas': u'pagamento-enviado'}})
+        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'status_code': 200, u'zas': u'pagamento-enviado'}})
+
+    @mock.patch('pagador.servicos.GravaEvidencia', mock.MagicMock())
+    @mock.patch('pagador.servicos.GerenciaPedido')
+    @mock.patch('pagador_pagseguro.servicos.EntregaPagamento')
+    def test_deve_dar_erro_se_nao_atualizar_pedido(self, entrega_mock, gerencia_mock):
+        gerencia_mock.return_value = mock.MagicMock(resultado={'sucesso': False})
+        entrega_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'pagamento-enviado'})
+        response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
+        response.status_code.should.be.equal(500)
+        json.loads(response.data).should.be.equal({u'erro_servidor': {u'status_code': 500, u'zas': u'pagamento-enviado'}, u'metadados': {u'api': u'API Pagador', u'resultado': u'erro_servidor', u'versao': u'1.0'}})
 
 
 class PagSeguroRegistrandoResultado(TestBase):
@@ -100,10 +110,20 @@ class PagSeguroRegistrandoResultado(TestBase):
     @mock.patch('pagador.servicos.GerenciaPedido', mock.MagicMock())
     @mock.patch('pagador.servicos.GravaEvidencia', mock.MagicMock())
     @mock.patch('pagador_pagseguro.servicos.RegistraResultado')
-    def test_deve_enviar_pagamento(self, registra_mock):
+    def test_deve_registrar_retorno(self, registra_mock):
         registra_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'resultado-registrado'})
         response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
-        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'zas': u'resultado-registrado'}})
+        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'status_code': 200, u'zas': u'resultado-registrado'}})
+
+    @mock.patch('pagador.servicos.GravaEvidencia', mock.MagicMock())
+    @mock.patch('pagador.servicos.GerenciaPedido')
+    @mock.patch('pagador_pagseguro.servicos.RegistraResultado')
+    def test_deve_dar_erro_se_nao_atualizar_pedido(self, entrega_mock, gerencia_mock):
+        gerencia_mock.return_value = mock.MagicMock(resultado={'sucesso': False})
+        entrega_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'pagamento-registrado'})
+        response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
+        response.status_code.should.be.equal(500)
+        json.loads(response.data).should.be.equal({u'erro_servidor': {u'status_code': 500, u'zas': u'pagamento-registrado'}, u'metadados': {u'api': u'API Pagador', u'resultado': u'erro_servidor', u'versao': u'1.0'}})
 
 
 class PagSeguroRegistrandoNotificacao(TestBase):
@@ -112,7 +132,17 @@ class PagSeguroRegistrandoNotificacao(TestBase):
     @mock.patch('pagador.servicos.GerenciaPedido', mock.MagicMock())
     @mock.patch('pagador.servicos.GravaEvidencia', mock.MagicMock())
     @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao')
-    def test_deve_enviar_pagamento(self, registra_mock):
+    def test_deve_registrar_notificacao(self, registra_mock):
         registra_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'notificacao-registrado'})
         response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
-        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'zas': u'notificacao-registrado'}})
+        json.loads(response.data).should.be.equal({u'metadados': {u'api': u'API Pagador', u'resultado': u'sucesso', u'versao': u'1.0'}, u'sucesso': {u'status_code': 200, u'zas': u'notificacao-registrado'}})
+
+    @mock.patch('pagador.servicos.GravaEvidencia', mock.MagicMock())
+    @mock.patch('pagador.servicos.GerenciaPedido')
+    @mock.patch('pagador_pagseguro.servicos.RegistraNotificacao')
+    def test_deve_dar_erro_se_nao_atualizar_pedido(self, entrega_mock, gerencia_mock):
+        gerencia_mock.return_value = mock.MagicMock(resultado={'sucesso': False})
+        entrega_mock.return_value = mock.MagicMock(redirect_para=None, resultado={'zas': 'pagamento-registrado'})
+        response = self.app.post(self.url, follow_redirects=True, headers={'authorization': 'chave_aplicacao CHAVE-TESTE'})
+        response.status_code.should.be.equal(500)
+        json.loads(response.data).should.be.equal({u'erro_servidor': {u'status_code': 500, u'zas': u'pagamento-registrado'}, u'metadados': {u'api': u'API Pagador', u'resultado': u'erro_servidor', u'versao': u'1.0'}})
