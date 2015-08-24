@@ -67,7 +67,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
     @mock.patch('pagador.entidades.ParametrosDeContrato')
     @mock.patch('pagador_pagseguro.servicos.InstalaMeioDePagamento.obter_conexao')
-    @mock.patch('pagador_pagseguro.servicos.settings', autospec=True)
+    @mock.patch('pagador_pagseguro.servicos.configuracoes', autospec=True)
     def test_nao_deve_ser_sandbox_em_producao(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'production'
         instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
@@ -75,7 +75,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
     @mock.patch('pagador.entidades.ParametrosDeContrato')
     @mock.patch('pagador_pagseguro.servicos.InstalaMeioDePagamento.obter_conexao')
-    @mock.patch('pagador_pagseguro.servicos.settings', autospec=True)
+    @mock.patch('pagador_pagseguro.servicos.configuracoes', autospec=True)
     def test_deve_ser_sandbox_em_desenvolvimento(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'development'
         instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
@@ -83,7 +83,7 @@ class PagSeguroInstalacaoMeioPagamento(unittest.TestCase):
 
     @mock.patch('pagador.entidades.ParametrosDeContrato')
     @mock.patch('pagador_pagseguro.servicos.InstalaMeioDePagamento.obter_conexao')
-    @mock.patch('pagador_pagseguro.servicos.settings', autospec=True)
+    @mock.patch('pagador_pagseguro.servicos.configuracoes', autospec=True)
     def test_deve_ser_sandbox_em_local(self, settings_mock, obter_mock, parametros_mock):
         settings_mock.ENVIRONMENT = 'local'
         instalador = servicos.InstalaMeioDePagamento(8, {'dados': 1})
@@ -192,7 +192,7 @@ class PagSeguroDesinstalacaoMeioPagamento(unittest.TestCase):
         instalador.desinstalar({}).should.be.equal({'url': 'https://sandbox.pagseguro.uol.com.br/aplicacao/listarAutorizacoes.jhtml'})
 
     @mock.patch('pagador.entidades.ParametrosDeContrato', mock.MagicMock())
-    @mock.patch('pagador_pagseguro.servicos.settings', autospec=True)
+    @mock.patch('pagador_pagseguro.servicos.configuracoes', autospec=True)
     def test_nao_deve_usar_sandbox_na_url_se_for_production(self, settings_mock):
         settings_mock.ENVIRONMENT = 'production'
         instalador = servicos.InstalaMeioDePagamento(8, {})

@@ -4,7 +4,7 @@ from urllib import urlencode
 
 from li_common.comunicacao import requisicao
 
-from pagador import settings, servicos
+from pagador import configuracoes, servicos
 
 
 class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
@@ -21,7 +21,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
 
     @property
     def sandbox(self):
-        return 'sandbox.' if (settings.ENVIRONMENT == 'local' or settings.ENVIRONMENT == 'development') else ''
+        return 'sandbox.' if (configuracoes.ENVIRONMENT == 'local' or configuracoes.ENVIRONMENT == 'development') else ''
 
     def montar_url_autorizacao(self):
         try:
@@ -38,7 +38,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
                     {'code': 'SEARCH_TRANSACTIONS'},
                     {'code': 'RECEIVE_TRANSACTION_NOTIFICATIONS'},
                 ],
-                'redirectURL': '<![CDATA[{}?{}]]>'.format(settings.INSTALAR_REDIRECT_URL.format(self.loja_id, 'pagseguro'), urlencode(parametros_redirect)),
+                'redirectURL': '<![CDATA[{}?{}]]>'.format(configuracoes.INSTALAR_REDIRECT_URL.format(self.loja_id, 'pagseguro'), urlencode(parametros_redirect)),
             }
         }
         dados_autorizacao = {
