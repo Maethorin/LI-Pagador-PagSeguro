@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from pagador import settings, entidades
+from pagador import configuracoes, entidades
 from pagador_pagseguro import cadastro
 
 CODIGO_GATEWAY = 1
@@ -98,7 +98,7 @@ class Malote(entidades.Malote):
     def monta_conteudo(self, pedido, parametros_contrato=None, dados=None):
         if 'next_url' not in dados:
             raise self.DadosInvalidos(u'Os dados de envio não foram processados corretamente no carrinho.')
-        notification_url = settings.NOTIFICACAO_URL.format('pagseguro', self.configuracao.loja_id)
+        notification_url = configuracoes.NOTIFICACAO_URL.format('pagseguro', self.configuracao.loja_id)
         numero_telefone = pedido.cliente_telefone
         self.app_key = parametros_contrato['app_secret']
         self.app_id = parametros_contrato['app_id']
