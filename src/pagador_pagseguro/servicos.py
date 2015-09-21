@@ -13,7 +13,7 @@ class InstalaMeioDePagamento(servicos.InstalaMeioDePagamento):
     def __init__(self, loja_id, dados):
         super(InstalaMeioDePagamento, self).__init__(loja_id, dados)
         self.usa_alt = 'ua' in self.dados
-        self.aplicacao = 'pagseguro-alternativo' if self.usa_alt else 'pagseguro'
+        self.aplicacao = 'pagseguro-alternativo' if self.usa_alt else self.dados.get('aplicacao', None) or 'pagseguro'
         parametros = self.cria_entidade_pagador('ParametrosDeContrato', loja_id=loja_id).obter_para(self.aplicacao)
         self.app_key = parametros['app_secret']
         self.app_id = parametros['app_id']
