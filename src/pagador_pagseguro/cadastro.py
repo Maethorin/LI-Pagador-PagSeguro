@@ -7,8 +7,8 @@ class FormularioPagSeguro(cadastro.Formulario):
     _PARCELAS = [(x, x) for x in range(1, 18)]
     _PARCELAS.insert(0, (18, "Todas"))
     TAXAS = (
-        ('pagseguro', u'4,79% recebimento em 14 dias.'),
-        ('pagseguro_399', u'3,99% recebimento em 30 dias.')
+        ('pagseguro', u'D14: 4,79% recebimento em 14 dias.'),
+        ('pagseguro_399', u'D30: 3,99% recebimento em 30 dias.')
     )
     ativo = cadastro.CampoFormulario('ativo', 'Pagamento ativo?', tipo=cadastro.TipoDeCampo.boleano, ordem=1)
     tarifacao = cadastro.CampoFormulario('aplicacao', u'Tarifação', tipo=cadastro.TipoDeCampo.escolha, requerido=True, opcoes=TAXAS, ordem=2, texto_ajuda=u'Escolha o modo de tarifação a ser usado com o PagSeguro. ATENÇÃO!!! Essa alteração requer a reinstalação do aplicativo para ter efeito.')
