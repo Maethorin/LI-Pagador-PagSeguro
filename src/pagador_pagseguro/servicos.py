@@ -165,7 +165,8 @@ class SituacoesDePagamento(servicos.SituacoesDePagamento):
         '5': servicos.SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA,
         '6': servicos.SituacaoPedido.SITUACAO_PAGTO_DEVOLVIDO,
         '7': servicos.SituacaoPedido.SITUACAO_PEDIDO_CANCELADO,
-        '8': servicos.SituacaoPedido.SITUACAO_PAGTO_CHARGEBACK
+        '8': servicos.SituacaoPedido.SITUACAO_PAGTO_CHARGEBACK,
+        '9': servicos.SituacaoPedido.SITUACAO_PAGTO_EM_DISPUTA,
     }
 
 
