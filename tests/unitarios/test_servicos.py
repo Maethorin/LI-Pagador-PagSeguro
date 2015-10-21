@@ -315,35 +315,35 @@ class PagSeguroEntregaPagamento(unittest.TestCase):
         entregador = servicos.EntregaPagamento(1234)
         entregador.resposta = mock.MagicMock(conteudo={'checkout': {'code': 'code-checkout'}}, status_code=200, sucesso=True, erro_servidor=False, timeout=False, nao_autenticado=False, nao_autorizado=False)
         entregador.processa_dados_pagamento()
-        entregador.resultado.should.be.equal({'url': 'https://sandbox.pagseguro.uol.com.br/v2/checkout/payment.html?code=code-checkout'})
+        entregador.resultado.should.be.equal({'url': 'https://sandbox.pagseguro.uol.com.br/v2/checkout/payment.html?code=code-checkout', 'fatal': False, 'pago': False})
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_processar_resposta_erro(self):
         entregador = servicos.EntregaPagamento(1234)
         entregador.resposta = mock.MagicMock(conteudo={}, status_code=500, sucesso=False, erro_servidor=True, timeout=False, nao_autenticado=False, nao_autorizado=False)
         entregador.processa_dados_pagamento()
-        entregador.resultado.should.be.equal({'mensagem': u'O servidor do PagSeguro está indisponível nesse momento.', 'status_code': 500})
+        entregador.resultado.should.be.equal({'mensagem': u'O servidor do PagSeguro está indisponível nesse momento.', 'status_code': 500, 'fatal': False, 'pago': False})
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_processar_resposta_timeout(self):
         entregador = servicos.EntregaPagamento(1234)
         entregador.resposta = mock.MagicMock(conteudo={}, status_code=408, sucesso=False, erro_servidor=False, timeout=True, nao_autenticado=False, nao_autorizado=False)
         entregador.processa_dados_pagamento()
-        entregador.resultado.should.be.equal({'mensagem': u'O servidor do PagSeguro não respondeu em tempo útil.', 'status_code': 408})
+        entregador.resultado.should.be.equal({'mensagem': u'O servidor do PagSeguro não respondeu em tempo útil.', 'status_code': 408, 'fatal': False, 'pago': False})
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_processar_resposta_nao_autenticado(self):
         entregador = servicos.EntregaPagamento(1234)
         entregador.resposta = mock.MagicMock(conteudo={}, status_code=401, sucesso=False, erro_servidor=False, timeout=False, nao_autenticado=True, nao_autorizado=False)
         entregador.processa_dados_pagamento()
-        entregador.resultado.should.be.equal({'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': 401})
+        entregador.resultado.should.be.equal({'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': 401, 'fatal': True, 'pago': False})
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_processar_resposta_nao_autorizado(self):
         entregador = servicos.EntregaPagamento(1234)
         entregador.resposta = mock.MagicMock(conteudo={}, status_code=400, sucesso=False, erro_servidor=False, timeout=False, nao_autenticado=False, nao_autorizado=True)
         entregador.processa_dados_pagamento()
-        entregador.resultado.should.be.equal({'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': 400})
+        entregador.resultado.should.be.equal({'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': 400, 'fatal': True, 'pago': False})
 
     @mock.patch('pagador_pagseguro.servicos.EntregaPagamento.obter_conexao', mock.MagicMock())
     def test_deve_disparar_erro_se_resposta_vier_com_status_nao_conhecido_e_sem_erro(self):
@@ -472,7 +472,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal('sucesso')
+        registrador.resultado.should.be.equal({'pago': True, 'resultado': 'sucesso'})
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id', 'valor_pago': '154.50'})
         registrador.situacao_pedido.should.be.equal(4)
 
@@ -484,14 +484,14 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             conteudo={
                 'transaction': {
                     'code': 'code-id',
-                    'status': '3'
+                    'status': '7'
                 },
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal('sucesso')
+        registrador.resultado.should.be.equal({'pago': False, 'resultado': 'sucesso'})
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'transacao_id': 'code-id'})
-        registrador.situacao_pedido.should.be.equal(4)
+        registrador.situacao_pedido.should.be.equal(8)
 
     @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
     def test_deve_montar_dados_de_pagamento_sem_id(self):
@@ -501,20 +501,20 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             conteudo={
                 'transaction': {
                     'grossAmount': '154.50',
-                    'status': '3'
+                    'status': '7'
                 },
             }
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal('sucesso')
+        registrador.resultado.should.be.equal({'pago': False, 'resultado': 'sucesso'})
         registrador.dados_pagamento.should.be.equal({'identificador_id': 'transacao-id', 'valor_pago': '154.50'})
-        registrador.situacao_pedido.should.be.equal(4)
+        registrador.situacao_pedido.should.be.equal(8)
 
     @mock.patch('pagador_pagseguro.servicos.RegistraResultado.obter_conexao', mock.MagicMock())
     def test_deve_montar_dados_de_pagamento_sem_resposta(self):
         registrador = servicos.RegistraResultado(1234, dados={})
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal('pendente')
+        registrador.resultado.should.be.equal({'pago': False, 'resultado': 'pendente'})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 
@@ -525,7 +525,7 @@ class PagSeguroRegistraResultado(unittest.TestCase):
             sucesso=False
         )
         registrador.monta_dados_pagamento()
-        registrador.resultado.should.be.equal('pendente')
+        registrador.resultado.should.be.equal({'pago': False, 'resultado': 'pendente'})
         registrador.dados_pagamento.should.be.equal({})
         registrador.situacao_pedido.should.be.none
 

@@ -128,14 +128,14 @@ class EntregaPagamento(servicos.EntregaPagamento):
     def _processa_resposta(self):
         status_code = self.resposta.status_code
         if self.resposta.erro_servidor:
-            return {'mensagem': u'O servidor do PagSeguro está indisponível nesse momento.', 'status_code': status_code}
+            return {'mensagem': u'O servidor do PagSeguro está indisponível nesse momento.', 'status_code': status_code, 'fatal': False, 'pago': False}
         if self.resposta.timeout:
-            return {'mensagem': u'O servidor do PagSeguro não respondeu em tempo útil.', 'status_code': status_code}
+            return {'mensagem': u'O servidor do PagSeguro não respondeu em tempo útil.', 'status_code': status_code, 'fatal': False, 'pago': False}
         if self.resposta.nao_autenticado or self.resposta.nao_autorizado:
-            return {'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': status_code}
+            return {'mensagem': u'Autenticação da loja com o PagSeguro Falhou. Contate o SAC da loja.', 'status_code': status_code, 'fatal': True, 'pago': False}
         if self.resposta.sucesso:
             url = 'https://{}pagseguro.uol.com.br/v2/checkout/payment.html?code={}'.format(self.sandbox, self.resposta.conteudo['checkout']['code'])
-            return {'url': url}
+            return {'url': url, 'fatal': False, 'pago': False}
         if 'errors' in self.resposta.conteudo:
             erros = self.resposta.conteudo['errors']
             sem_excecao = False
@@ -146,7 +146,7 @@ class EntregaPagamento(servicos.EntregaPagamento):
             else:
                 sem_excecao = self.trata_mensagem_conhecida(erros, mensagens)
             if sem_excecao:
-                return {'mensagem': u'\n'.join(mensagens), 'status_code': status_code, 'fatal': True}
+                return {'mensagem': u'\n'.join(mensagens), 'status_code': status_code, 'fatal': True, 'pago': False}
             raise self.EnvioNaoRealizado(u'Ocorreram erros no envio dos dados para o PagSeguro', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=mensagens)
         raise self.EnvioNaoRealizado(u'O PagSeguro não enviou uma resposta válida', self.loja_id, self.pedido.numero, dados_envio=self.malote.to_dict(), erros=[])
 
@@ -190,9 +190,9 @@ class RegistraResultado(servicos.RegistraResultado):
             if 'grossAmount' in transacao:
                 self.dados_pagamento['valor_pago'] = transacao['grossAmount']
             self.situacao_pedido = SituacoesDePagamento.do_tipo(transacao['status'])
-            self.resultado = 'sucesso'
+            self.resultado = {'resultado': 'sucesso', 'pago': self.situacao_pedido in [servicos.SituacaoPedido.SITUACAO_PEDIDO_PAGO, servicos.SituacaoPedido.SITUACAO_PAGTO_EM_ANALISE]}
         else:
-            self.resultado = 'pendente'
+            self.resultado = {'resultado': 'pendente', 'pago': False}
 
     def _gera_dados_envio(self):
         aplicacao = 'pagseguro-alternativo' if self.configuracao.aplicacao == 'pagseguro-alternativo' else 'pagseguro'
